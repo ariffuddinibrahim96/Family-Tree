@@ -182,26 +182,6 @@
     .upload-text { font-size:0.82rem; color:var(--muted); }
     .upload-text span { color:var(--gold); font-weight:600; }
 
-/* ── Delete Photo Button ── */
-.delete-photo-btn {
-  position:relative; z-index:5;
-  display:inline-flex; align-items:center; gap:0.3rem;
-  margin-top:0.4rem; padding:3px 12px;
-  border-radius:20px; border:1px solid rgba(255,80,80,0.4);
-  background:rgba(255,80,80,0.1); color:#ff8080;
-  font-size:0.72rem; font-weight:600; cursor:pointer;
-  transition:all .2s; opacity:0; pointer-events:none;
-}
-.delete-photo-btn.visible {
-  opacity:1; pointer-events:all;
-}
-.delete-photo-btn:hover {
-  background:rgba(255,80,80,0.25);
-  border-color:#ff5050; color:#ff5050;
-  transform:scale(1.05);
-}
-.photo-upload-area.has-image .delete-photo-btn { opacity:1; pointer-events:all; }
-
     /* VIEW MODAL */
     .view-modal-box { max-width:500px; }
     .modal-avatar-lg { width:90px; height:90px; border-radius:50%; margin:0 auto 1.5rem; display:flex; align-items:center; justify-content:center; font-size:2rem; font-weight:800; color:#000; border:3px solid var(--gold); box-shadow:0 0 30px rgba(240,192,64,0.4); overflow:hidden; }
@@ -622,14 +602,10 @@
     <button class="modal-close-btn" onclick="closeOverlay('add-overlay')">✕</button>
     <div class="modal-title">🌱 Add Family Member</div>
     <div class="photo-upload-area" id="add-photo-area" onclick="triggerUpload('add-photo-input')">
-  <input type="file" id="add-photo-input" accept="image/*" onchange="handlePhoto(event,'add-photo-preview','add-photo-area','add')" onclick="event.stopPropagation()"/>
-  <div class="photo-preview" id="add-photo-preview">📷</div>
-  <div class="upload-text">Click to <span>Upload Photo</span></div>
-  <button class="delete-photo-btn" id="add-delete-photo-btn"
-    onclick="deletePhoto(event,'add-photo-preview','add-photo-area','add','add-photo-input')">
-    🗑️ Remove Photo
-  </button>
-</div>
+      <input type="file" id="add-photo-input" accept="image/*" onchange="handlePhoto(event,'add-photo-preview','add-photo-area','add')" onclick="event.stopPropagation()"/>
+      <div class="photo-preview" id="add-photo-preview">📷</div>
+      <div class="upload-text">Click to <span>Upload Photo</span></div>
+    </div>
     <div class="form-row">
       <div class="form-group"><label>First Name *</label><input type="text" id="a-first" placeholder="John"/></div>
       <div class="form-group"><label>Last Name *</label><input type="text" id="a-last" placeholder="Anderson"/></div>
@@ -677,14 +653,10 @@
     <button class="modal-close-btn" onclick="closeOverlay('edit-overlay')">✕</button>
     <div class="modal-title">✏️ Edit Family Member</div>
     <div class="photo-upload-area" id="edit-photo-area" onclick="triggerUpload('edit-photo-input')">
-  <input type="file" id="edit-photo-input" accept="image/*" onchange="handlePhoto(event,'edit-photo-preview','edit-photo-area','edit')" onclick="event.stopPropagation()"/>
-  <div class="photo-preview" id="edit-photo-preview">📷</div>
-  <div class="upload-text">Click to <span>Change Photo</span></div>
-  <button class="delete-photo-btn" id="edit-delete-photo-btn"
-    onclick="deletePhoto(event,'edit-photo-preview','edit-photo-area','edit','edit-photo-input')">
-    🗑️ Remove Photo
-  </button>
-</div>
+      <input type="file" id="edit-photo-input" accept="image/*" onchange="handlePhoto(event,'edit-photo-preview','edit-photo-area','edit')" onclick="event.stopPropagation()"/>
+      <div class="photo-preview" id="edit-photo-preview">📷</div>
+      <div class="upload-text">Click to <span>Change Photo</span></div>
+    </div>
     <input type="hidden" id="e-id"/>
     <div class="form-row">
       <div class="form-group"><label>First Name *</label><input type="text" id="e-first"/></div>
@@ -749,14 +721,10 @@
     <div class="side-info-banner">💡 Adding partner beside <strong id="side-target-name">—</strong></div>
     <input type="hidden" id="s-linked-id"/>
     <div class="photo-upload-area" id="side-photo-area" onclick="triggerUpload('side-photo-input')">
-  <input type="file" id="side-photo-input" accept="image/*" onchange="handlePhoto(event,'side-photo-preview','side-photo-area','side')" onclick="event.stopPropagation()"/>
-  <div class="photo-preview" id="side-photo-preview">📷</div>
-  <div class="upload-text">Click to <span>Upload Photo</span></div>
-  <button class="delete-photo-btn" id="side-delete-photo-btn"
-    onclick="deletePhoto(event,'side-photo-preview','side-photo-area','side','side-photo-input')">
-    🗑️ Remove Photo
-  </button>
-</div>
+      <input type="file" id="side-photo-input" accept="image/*" onchange="handlePhoto(event,'side-photo-preview','side-photo-area','side')" onclick="event.stopPropagation()"/>
+      <div class="photo-preview" id="side-photo-preview">📷</div>
+      <div class="upload-text">Click to <span>Upload Photo</span></div>
+    </div>
     <div class="form-row">
       <div class="form-group"><label>First Name *</label><input type="text" id="s-first" placeholder="Jane"/></div>
       <div class="form-group"><label>Last Name *</label><input type="text" id="s-last" placeholder="Smith"/></div>
@@ -816,8 +784,7 @@ let currentRelTab     = 'spouse';
 let selectedPickerId  = null;     // ← person selected in picker
 let showLines         = true;
 let currentScale      = 1;
-let photoData        = { add:null, edit:null, side:null };
-let editPhotoDeleted = false; // ← tracks if user removed photo in edit modal
+let photoData         = { add:null, edit:null, side:null };
 let activityLog       = [];
 let activityExpanded  = false;
 let unsubscribeMembers= null;
@@ -1046,59 +1013,253 @@ function updateStats(){
    SVG LINES
 ══════════════════════════════════════════════════════ */
 function drawLines(){
-  const svg=document.getElementById('tree-svg'),cont=document.getElementById('tree-container');
-  const w=cont.scrollWidth,h=cont.scrollHeight;
-  svg.setAttribute('viewBox',`0 0 ${w} ${h}`);
-  svg.style.width=w+'px'; svg.style.height=h+'px'; svg.innerHTML='';
+  const svg  = document.getElementById('tree-svg');
+  const cont = document.getElementById('tree-container');
+  const w    = cont.scrollWidth;
+  const h    = cont.scrollHeight;
+
+  svg.setAttribute('viewBox', `0 0 ${w} ${h}`);
+  svg.style.width  = w + 'px';
+  svg.style.height = h + 'px';
+  svg.innerHTML    = '';
+
   if(!showLines) return;
-  const cR=cont.getBoundingClientRect();
-  const defs=mkSVG('defs',{});
-  defs.innerHTML='<filter id="glow"><feGaussianBlur in="SourceGraphic" stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
+
+  const cR = cont.getBoundingClientRect();
+  const sx = cont.scrollLeft;
+  const sy = cont.scrollTop;
+
+  // ── Glow filter ──
+  const defs = mkSVG('defs', {});
+  defs.innerHTML = `
+    <filter id="glow">
+      <feGaussianBlur in="SourceGraphic" stdDeviation="3" result="b"/>
+      <feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge>
+    </filter>
+    <marker id="dot-gold" markerWidth="6" markerHeight="6"
+      refX="3" refY="3" orient="auto">
+      <circle cx="3" cy="3" r="2.5" fill="#f0c040"/>
+    </marker>
+    <marker id="dot-pink" markerWidth="6" markerHeight="6"
+      refX="3" refY="3" orient="auto">
+      <circle cx="3" cy="3" r="2.5" fill="rgba(255,130,180,0.9)"/>
+    </marker>`;
   svg.appendChild(defs);
-  members.forEach(child=>{
-    (child.parents||[]).forEach(pid=>{
-      const pe=document.getElementById(`card-${pid}`),ce=document.getElementById(`card-${child.id}`);
-      if(!pe||!ce) return;
-      const pr=pe.getBoundingClientRect(),cr=ce.getBoundingClientRect();
-      const sx=cont.scrollLeft,sy=cont.scrollTop;
-      const x1=pr.left-cR.left+sx+pr.width/2,y1=pr.top-cR.top+sy+pr.height;
-      const x2=cr.left-cR.left+sx+cr.width/2,y2=cr.top-cR.top+sy;
-      const my=(y1+y2)/2;
-      svg.appendChild(mkSVG('path',{d:`M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}`,stroke:'rgba(240,192,64,0.5)','stroke-width':'2',fill:'none','stroke-dasharray':'6,3'}));
-      [{x:x1,y:y1},{x:x2,y:y2}].forEach(p=>svg.appendChild(mkSVG('circle',{cx:p.x,cy:p.y,r:4,fill:'#f0c040',filter:'url(#glow)'})));
-    });
+
+  /* ══════════════════════════════════════════════════
+     HELPER — get card centre points
+  ══════════════════════════════════════════════════ */
+  function getCardPoints(id){
+    const el = document.getElementById(`card-${id}`);
+    if(!el) return null;
+    const r = el.getBoundingClientRect();
+    return {
+      topX   : r.left - cR.left + sx + r.width  / 2,
+      topY   : r.top  - cR.top  + sy,
+      botX   : r.left - cR.left + sx + r.width  / 2,
+      botY   : r.top  - cR.top  + sy + r.height,
+      leftX  : r.left - cR.left + sx,
+      rightX : r.left - cR.left + sx + r.width,
+      midY   : r.top  - cR.top  + sy + r.height / 2,
+      w      : r.width,
+      h      : r.height
+    };
+  }
+
+  /* ══════════════════════════════════════════════════
+     HELPER — draw a gold dot
+  ══════════════════════════════════════════════════ */
+  function dot(x, y, color='#f0c040'){
+    svg.appendChild(mkSVG('circle',{
+      cx:x, cy:y, r:4,
+      fill:color,
+      filter:'url(#glow)'
+    }));
+  }
+
+  /* ══════════════════════════════════════════════════
+     HELPER — draw an org-chart elbow line
+     Parent bottom-center → horizontal bar → children top-centers
+  ══════════════════════════════════════════════════ */
+  function drawOrgBranch(parentId, childIds, strokeColor, dashArray){
+    const parentPts = getCardPoints(parentId);
+    if(!parentPts) return;
+
+    // Collect valid children positions
+    const childPts = childIds
+      .map(id => ({ id, pts: getCardPoints(id) }))
+      .filter(c => c.pts !== null);
+    if(!childPts.length) return;
+
+    /* mid-point Y between parent bottom and first child top —
+       this is where the horizontal bar sits               */
+    const minChildTopY = Math.min(...childPts.map(c => c.pts.topY));
+    const barY = parentPts.botY + (minChildTopY - parentPts.botY) / 2;
+
+    // ── 1. Vertical line: parent bottom → barY ──
+    svg.appendChild(mkSVG('line',{
+      x1: parentPts.botX, y1: parentPts.botY,
+      x2: parentPts.botX, y2: barY,
+      stroke: strokeColor,
+      'stroke-width': '2',
+      'stroke-dasharray': dashArray
+    }));
+    dot(parentPts.botX, parentPts.botY);
+
+    if(childPts.length === 1){
+      // Single child — just one straight vertical line
+      const c = childPts[0].pts;
+      svg.appendChild(mkSVG('line',{
+        x1: c.topX, y1: barY,
+        x2: c.topX, y2: c.topY,
+        stroke: strokeColor,
+        'stroke-width': '2',
+        'stroke-dasharray': dashArray
+      }));
+      dot(c.topX, c.topY);
+
+    } else {
+      // Multiple children — draw horizontal bar + drops
+
+      const leftMost  = Math.min(...childPts.map(c => c.pts.topX));
+      const rightMost = Math.max(...childPts.map(c => c.pts.topX));
+
+      // ── 2. Horizontal bar ──
+      svg.appendChild(mkSVG('line',{
+        x1: leftMost,  y1: barY,
+        x2: rightMost, y2: barY,
+        stroke: strokeColor,
+        'stroke-width': '2',
+        'stroke-dasharray': dashArray
+      }));
+
+      // ── 3. Vertical drop for each child ──
+      childPts.forEach(({ pts: c }) => {
+        svg.appendChild(mkSVG('line',{
+          x1: c.topX, y1: barY,
+          x2: c.topX, y2: c.topY,
+          stroke: strokeColor,
+          'stroke-width': '2',
+          'stroke-dasharray': dashArray
+        }));
+        dot(c.topX, c.topY);
+      });
+    }
+  }
+
+  /* ══════════════════════════════════════════════════
+     DRAW PARENT → CHILDREN  (org-chart style)
+     Group children by their parent(s) to draw proper
+     shared horizontal bars
+  ══════════════════════════════════════════════════ */
+  const drawnParentBranches = new Set();
+
+  members.forEach(parent => {
+    const childIds = (parent.children || []).filter(cid =>
+      members.find(x => x.id == cid)
+    );
+    if(!childIds.length) return;
+
+    const key = `parent-${parent.id}`;
+    if(drawnParentBranches.has(key)) return;
+    drawnParentBranches.add(key);
+
+    drawOrgBranch(
+      parent.id,
+      childIds,
+      'rgba(240,192,64,0.6)',
+      '0'   // solid line for parent-child
+    );
   });
-  const drawn=new Set();
-  members.forEach(m=>{
+
+  /* ══════════════════════════════════════════════════
+     DRAW SPOUSE LINES  (horizontal connector with ♥)
+  ══════════════════════════════════════════════════ */
+  const drawnSpouse = new Set();
+
+  members.forEach(m => {
     if(!m.spouseId) return;
-    const key=[m.id,m.spouseId].sort().join('-');
-    if(drawn.has(key)) return; drawn.add(key);
-    const e1=document.getElementById(`card-${m.id}`),e2=document.getElementById(`card-${m.spouseId}`);
-    if(!e1||!e2) return;
-    const r1=e1.getBoundingClientRect(),r2=e2.getBoundingClientRect();
-    const sx=cont.scrollLeft,sy=cont.scrollTop;
-    const x1=r1.left-cR.left+sx+r1.width,y1=r1.top-cR.top+sy+r1.height/2;
-    const x2=r2.left-cR.left+sx,y2=r2.top-cR.top+sy+r2.height/2;
-    svg.appendChild(mkSVG('line',{x1,y1,x2,y2,stroke:'rgba(255,130,180,0.6)','stroke-width':'2','stroke-dasharray':'4,3'}));
-    const hrt=document.createElementNS('http://www.w3.org/2000/svg','text');
-    hrt.setAttribute('x',(x1+x2)/2); hrt.setAttribute('y',(y1+y2)/2+6);
-    hrt.setAttribute('text-anchor','middle'); hrt.setAttribute('font-size','14');
-    hrt.setAttribute('fill','rgba(255,130,180,0.9)'); hrt.textContent='♥';
-    svg.appendChild(hrt);
+    const key = [m.id, m.spouseId].sort().join('-');
+    if(drawnSpouse.has(key)) return;
+    drawnSpouse.add(key);
+
+    const e1 = document.getElementById(`card-${m.id}`);
+    const e2 = document.getElementById(`card-${m.spouseId}`);
+    if(!e1 || !e2) return;
+
+    const r1 = e1.getBoundingClientRect();
+    const r2 = e2.getBoundingClientRect();
+
+    // Always draw left-card right-edge → right-card left-edge
+    const leftCard  = r1.left < r2.left ? r1 : r2;
+    const rightCard = r1.left < r2.left ? r2 : r1;
+
+    const x1 = leftCard.right  - cR.left + sx;
+    const y1 = leftCard.top    - cR.top  + sy + leftCard.height  / 2;
+    const x2 = rightCard.left  - cR.left + sx;
+    const y2 = rightCard.top   - cR.top  + sy + rightCard.height / 2;
+    const mx = (x1 + x2) / 2;
+    const my = (y1 + y2) / 2;
+
+    // Horizontal line left side
+    svg.appendChild(mkSVG('line',{
+      x1, y1, x2: mx - 10, y2: y1,
+      stroke:'rgba(255,130,180,0.7)',
+      'stroke-width':'2',
+      'stroke-dasharray':'4,3'
+    }));
+    // Horizontal line right side
+    svg.appendChild(mkSVG('line',{
+      x1: mx + 10, y1: y2, x2, y2,
+      stroke:'rgba(255,130,180,0.7)',
+      'stroke-width':'2',
+      'stroke-dasharray':'4,3'
+    }));
+
+    // ♥ heart in the middle
+    const heart = document.createElementNS('http://www.w3.org/2000/svg','text');
+    heart.setAttribute('x', mx);
+    heart.setAttribute('y', my + 6);
+    heart.setAttribute('text-anchor','middle');
+    heart.setAttribute('font-size','16');
+    heart.setAttribute('fill','rgba(255,130,180,1)');
+    heart.style.filter = 'drop-shadow(0 0 4px rgba(255,130,180,0.8))';
+    heart.textContent  = '♥';
+    svg.appendChild(heart);
+
+    // End dots
+    dot(x1, y1, 'rgba(255,130,180,0.9)');
+    dot(x2, y2, 'rgba(255,130,180,0.9)');
   });
-  // Sibling lines (dashed teal)
-  const drawnSib=new Set();
-  members.forEach(m=>{
-    getSiblings(m).forEach(sib=>{
-      const key=[m.id,sib.id].sort().join('-');
-      if(drawnSib.has(key)) return; drawnSib.add(key);
-      const e1=document.getElementById(`card-${m.id}`),e2=document.getElementById(`card-${sib.id}`);
-      if(!e1||!e2) return;
-      const r1=e1.getBoundingClientRect(),r2=e2.getBoundingClientRect();
-      const sx=cont.scrollLeft,sy=cont.scrollTop;
-      const x1=r1.left-cR.left+sx+r1.width/2,y1=r1.top-cR.top+sy+6;
-      const x2=r2.left-cR.left+sx+r2.width/2,y2=r2.top-cR.top+sy+6;
-      svg.appendChild(mkSVG('line',{x1,y1,x2,y2,stroke:'rgba(80,220,160,0.2)','stroke-width':'1','stroke-dasharray':'3,4'}));
+
+  /* ══════════════════════════════════════════════════
+     DRAW SIBLING LINES  (subtle dashed teal bar
+     sitting just above the sibling cards)
+  ══════════════════════════════════════════════════ */
+  const drawnSib = new Set();
+
+  members.forEach(m => {
+    getSiblings(m).forEach(sib => {
+      const key = [m.id, sib.id].sort().join('-');
+      if(drawnSib.has(key)) return;
+      drawnSib.add(key);
+
+      const p1 = getCardPoints(m.id);
+      const p2 = getCardPoints(sib.id);
+      if(!p1 || !p2) return;
+
+      // Horizontal line connecting sibling tops (very subtle)
+      const lx = Math.min(p1.topX, p2.topX);
+      const rx = Math.max(p1.topX, p2.topX);
+      const ty = Math.min(p1.topY, p2.topY) - 8;
+
+      svg.appendChild(mkSVG('line',{
+        x1: lx, y1: ty,
+        x2: rx, y2: ty,
+        stroke:'rgba(80,220,160,0.25)',
+        'stroke-width':'1.5',
+        'stroke-dasharray':'3,4'
+      }));
     });
   });
 }
@@ -1505,10 +1666,7 @@ async function addMember(){
 ══════════════════════════════════════════════════════ */
 function openEditModal(id){
   const m=members.find(x=>x.id==id); if(!m) return;
-  currentEditId=id;   photoData.edit     = m.photo || null;
-  editPhotoDeleted   = false;
-  const prevBtn = document.getElementById('edit-delete-photo-btn');
-  if(prevBtn) prevBtn.classList.toggle('visible', !!m.photo);
+  currentEditId=id; photoData.edit=m.photo||null;
   document.getElementById('e-id').value=id;
   document.getElementById('e-first').value=m.first||'';
   document.getElementById('e-last').value=m.last||'';
@@ -1529,7 +1687,7 @@ async function saveEdit(){
   const first=document.getElementById('e-first').value.trim(),last=document.getElementById('e-last').value.trim();
   if(!first||!last){ showToast('⚠️ First & last name required!','error'); return; }
   const m=members.find(x=>x.id==currentEditId); if(!m) return;
-  const updated={...m,first,last,birth:parseInt(document.getElementById('e-birth').value)||m.birth,death:parseInt(document.getElementById('e-death').value)||null,gen:parseInt(document.getElementById('e-gen').value),role:document.getElementById('e-role').value,location:document.getElementById('e-loc').value||m.location,occupation:document.getElementById('e-occ').value||m.occupation,hobby:document.getElementById('e-hobby').value||m.hobby,bio:document.getElementById('e-bio').value||m.bio,photo: editPhotoDeleted ? null : (photoData.edit || m.photo || null)
+  const updated={...m,first,last,birth:parseInt(document.getElementById('e-birth').value)||m.birth,death:parseInt(document.getElementById('e-death').value)||null,gen:parseInt(document.getElementById('e-gen').value),role:document.getElementById('e-role').value,location:document.getElementById('e-loc').value||m.location,occupation:document.getElementById('e-occ').value||m.occupation,hobby:document.getElementById('e-hobby').value||m.hobby,bio:document.getElementById('e-bio').value||m.bio,photo:photoData.edit||m.photo||null};
   await saveFS(currentEditId,updated);
   closeOverlay('edit-overlay');
   showToast(`✅ ${first} ${last} updated!`);
@@ -1594,54 +1752,14 @@ async function addSideMember(){
    PHOTO
 ══════════════════════════════════════════════════════ */
 function triggerUpload(id){ document.getElementById(id).click(); }
-
-function handlePhoto(event, previewId, areaId, type){
-  const file = event.target.files[0];
-  if(!file) return;
-  if(file.size > 5*1024*1024){ showToast('⚠️ Max 5MB image size','error'); return; }
-  const reader = new FileReader();
-  reader.onload = e => {
-    const data = e.target.result;
-    document.getElementById(previewId).innerHTML = `<img src="${data}" alt="preview"/>`;
-    document.getElementById(areaId).classList.add('has-image');
-    photoData[type] = data;
-    // Show the delete button
-    showDeletePhotoBtn(type, true);
-  };
+function handlePhoto(event,previewId,areaId,type){
+  const file=event.target.files[0]; if(!file) return;
+  if(file.size>5*1024*1024){ showToast('⚠️ Max 5MB','error'); return; }
+  const reader=new FileReader();
+  reader.onload=e=>{ const data=e.target.result; document.getElementById(previewId).innerHTML=`<img src="${data}" alt="preview"/>`; document.getElementById(areaId).classList.add('has-image'); photoData[type]=data; };
   reader.readAsDataURL(file);
 }
-
-function resetPhoto(previewId, areaId){
-  document.getElementById(previewId).innerHTML = '📷';
-  document.getElementById(areaId).classList.remove('has-image');
-}
-
-// ── NEW: Delete / Remove Photo ──
-function deletePhoto(event, previewId, areaId, type, inputId){
-  event.stopPropagation(); // prevent triggering file upload
-  // Clear preview
-  document.getElementById(previewId).innerHTML = '📷';
-  document.getElementById(areaId).classList.remove('has-image');
-  // Clear stored photo data
-  photoData[type] = null;
-  // Reset file input so same file can be re-uploaded
-  const input = document.getElementById(inputId);
-  if(input) input.value = '';
-  // Hide delete button
-  showDeletePhotoBtn(type, false);
-  // If editing an existing member, mark photo as removed
-  if(type === 'edit'){
-    editPhotoDeleted = true;
-  }
-  showToast('🗑️ Photo removed!');
-}
-
-// ── Show/hide the delete photo button ──
-function showDeletePhotoBtn(type, visible){
-  const btnId = `${type}-delete-photo-btn`;
-  const btn   = document.getElementById(btnId);
-  if(btn) btn.classList.toggle('visible', visible);
-}
+function resetPhoto(previewId,areaId){ document.getElementById(previewId).innerHTML='📷'; document.getElementById(areaId).classList.remove('has-image'); }
 
 /* ══════════════════════════════════════════════════════
    SEARCH
