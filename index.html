@@ -414,7 +414,7 @@
     <div class="stats-bar">
       <div class="stat-item"><div class="stat-num" id="stat-members">—</div><div class="stat-label">Members</div></div>
       <div class="stat-item"><div class="stat-num" id="stat-gens">—</div><div class="stat-label">Generations</div></div>
-      <div class="stat-item"><div class="stat-num">1940</div><div class="stat-label">Since</div></div>
+      <div class="stat-item"><div class="stat-num" id="stat-since">—</div><div class="stat-label">Since</div></div>
       <div class="stat-item"><div class="stat-num" id="stat-marriages">—</div><div class="stat-label">Marriages</div></div>
     </div>
   </header>
@@ -973,9 +973,40 @@ function getSiblings(m){
    STATS
 ══════════════════════════════════════════════════════ */
 function updateStats(){
-  document.getElementById('stat-members').textContent=members.length;
-  document.getElementById('stat-marriages').textContent=Math.floor(members.filter(m=>m.spouseId).length/2);
-  document.getElementById('stat-gens').textContent=[...new Set(members.map(m=>m.gen))].length;
+  document.getElementById('stat-members').textContent = members.length;
+  document.getElementById('stat-marriages').textContent = Math.floor(members.filter(m=>m.spouseId).length/2);
+  document.getElementById('stat-gens').textContent = [...new Set(members.map(m=>m.gen))].length;
+
+  // ── Dynamic "Since" — finds earliest patriarch/matriarch birth year ──
+  const founders = members.filter(m =>
+    m.role === 'patriarch' ||
+    m.role === 'matriarch'
+  );
+
+  if(founders.length > 0){
+    // Get the earliest birth year among all patriarchs/matriarchs
+    const earliestYear = Math.min(
+      ...founders
+        .map(m => parseInt(m.birth))
+        .filter(y => !isNaN(y) && y > 0)
+    );
+    document.getElementById('stat-since').textContent =
+      isFinite(earliestYear) ? earliestYear : '—';
+  } else {
+    // Fallback: find the oldest member in Gen 1
+    const gen1 = members.filter(m => m.gen === 1);
+    if(gen1.length > 0){
+      const earliest = Math.min(
+        ...gen1
+          .map(m => parseInt(m.birth))
+          .filter(y => !isNaN(y) && y > 0)
+      );
+      document.getElementById('stat-since').textContent =
+        isFinite(earliest) ? earliest : '—';
+    } else {
+      document.getElementById('stat-since').textContent = '—';
+    }
+  }
 }
 
 /* ══════════════════════════════════════════════════════
