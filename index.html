@@ -182,6 +182,26 @@
     .upload-text { font-size:0.82rem; color:var(--muted); }
     .upload-text span { color:var(--gold); font-weight:600; }
 
+/* ── Delete Photo Button ── */
+.delete-photo-btn {
+  position:relative; z-index:5;
+  display:inline-flex; align-items:center; gap:0.3rem;
+  margin-top:0.4rem; padding:3px 12px;
+  border-radius:20px; border:1px solid rgba(255,80,80,0.4);
+  background:rgba(255,80,80,0.1); color:#ff8080;
+  font-size:0.72rem; font-weight:600; cursor:pointer;
+  transition:all .2s; opacity:0; pointer-events:none;
+}
+.delete-photo-btn.visible {
+  opacity:1; pointer-events:all;
+}
+.delete-photo-btn:hover {
+  background:rgba(255,80,80,0.25);
+  border-color:#ff5050; color:#ff5050;
+  transform:scale(1.05);
+}
+.photo-upload-area.has-image .delete-photo-btn { opacity:1; pointer-events:all; }
+
     /* VIEW MODAL */
     .view-modal-box { max-width:500px; }
     .modal-avatar-lg { width:90px; height:90px; border-radius:50%; margin:0 auto 1.5rem; display:flex; align-items:center; justify-content:center; font-size:2rem; font-weight:800; color:#000; border:3px solid var(--gold); box-shadow:0 0 30px rgba(240,192,64,0.4); overflow:hidden; }
@@ -602,10 +622,14 @@
     <button class="modal-close-btn" onclick="closeOverlay('add-overlay')">✕</button>
     <div class="modal-title">🌱 Add Family Member</div>
     <div class="photo-upload-area" id="add-photo-area" onclick="triggerUpload('add-photo-input')">
-      <input type="file" id="add-photo-input" accept="image/*" onchange="handlePhoto(event,'add-photo-preview','add-photo-area','add')" onclick="event.stopPropagation()"/>
-      <div class="photo-preview" id="add-photo-preview">📷</div>
-      <div class="upload-text">Click to <span>Upload Photo</span></div>
-    </div>
+  <input type="file" id="add-photo-input" accept="image/*" onchange="handlePhoto(event,'add-photo-preview','add-photo-area','add')" onclick="event.stopPropagation()"/>
+  <div class="photo-preview" id="add-photo-preview">📷</div>
+  <div class="upload-text">Click to <span>Upload Photo</span></div>
+  <button class="delete-photo-btn" id="add-delete-photo-btn"
+    onclick="deletePhoto(event,'add-photo-preview','add-photo-area','add','add-photo-input')">
+    🗑️ Remove Photo
+  </button>
+</div>
     <div class="form-row">
       <div class="form-group"><label>First Name *</label><input type="text" id="a-first" placeholder="John"/></div>
       <div class="form-group"><label>Last Name *</label><input type="text" id="a-last" placeholder="Anderson"/></div>
@@ -653,10 +677,14 @@
     <button class="modal-close-btn" onclick="closeOverlay('edit-overlay')">✕</button>
     <div class="modal-title">✏️ Edit Family Member</div>
     <div class="photo-upload-area" id="edit-photo-area" onclick="triggerUpload('edit-photo-input')">
-      <input type="file" id="edit-photo-input" accept="image/*" onchange="handlePhoto(event,'edit-photo-preview','edit-photo-area','edit')" onclick="event.stopPropagation()"/>
-      <div class="photo-preview" id="edit-photo-preview">📷</div>
-      <div class="upload-text">Click to <span>Change Photo</span></div>
-    </div>
+  <input type="file" id="edit-photo-input" accept="image/*" onchange="handlePhoto(event,'edit-photo-preview','edit-photo-area','edit')" onclick="event.stopPropagation()"/>
+  <div class="photo-preview" id="edit-photo-preview">📷</div>
+  <div class="upload-text">Click to <span>Change Photo</span></div>
+  <button class="delete-photo-btn" id="edit-delete-photo-btn"
+    onclick="deletePhoto(event,'edit-photo-preview','edit-photo-area','edit','edit-photo-input')">
+    🗑️ Remove Photo
+  </button>
+</div>
     <input type="hidden" id="e-id"/>
     <div class="form-row">
       <div class="form-group"><label>First Name *</label><input type="text" id="e-first"/></div>
@@ -721,10 +749,14 @@
     <div class="side-info-banner">💡 Adding partner beside <strong id="side-target-name">—</strong></div>
     <input type="hidden" id="s-linked-id"/>
     <div class="photo-upload-area" id="side-photo-area" onclick="triggerUpload('side-photo-input')">
-      <input type="file" id="side-photo-input" accept="image/*" onchange="handlePhoto(event,'side-photo-preview','side-photo-area','side')" onclick="event.stopPropagation()"/>
-      <div class="photo-preview" id="side-photo-preview">📷</div>
-      <div class="upload-text">Click to <span>Upload Photo</span></div>
-    </div>
+  <input type="file" id="side-photo-input" accept="image/*" onchange="handlePhoto(event,'side-photo-preview','side-photo-area','side')" onclick="event.stopPropagation()"/>
+  <div class="photo-preview" id="side-photo-preview">📷</div>
+  <div class="upload-text">Click to <span>Upload Photo</span></div>
+  <button class="delete-photo-btn" id="side-delete-photo-btn"
+    onclick="deletePhoto(event,'side-photo-preview','side-photo-area','side','side-photo-input')">
+    🗑️ Remove Photo
+  </button>
+</div>
     <div class="form-row">
       <div class="form-group"><label>First Name *</label><input type="text" id="s-first" placeholder="Jane"/></div>
       <div class="form-group"><label>Last Name *</label><input type="text" id="s-last" placeholder="Smith"/></div>
@@ -784,7 +816,8 @@ let currentRelTab     = 'spouse';
 let selectedPickerId  = null;     // ← person selected in picker
 let showLines         = true;
 let currentScale      = 1;
-let photoData         = { add:null, edit:null, side:null };
+let photoData        = { add:null, edit:null, side:null };
+let editPhotoDeleted = false; // ← tracks if user removed photo in edit modal
 let activityLog       = [];
 let activityExpanded  = false;
 let unsubscribeMembers= null;
@@ -1472,7 +1505,10 @@ async function addMember(){
 ══════════════════════════════════════════════════════ */
 function openEditModal(id){
   const m=members.find(x=>x.id==id); if(!m) return;
-  currentEditId=id; photoData.edit=m.photo||null;
+  currentEditId=id;   photoData.edit     = m.photo || null;
+  editPhotoDeleted   = false;
+  const prevBtn = document.getElementById('edit-delete-photo-btn');
+  if(prevBtn) prevBtn.classList.toggle('visible', !!m.photo);
   document.getElementById('e-id').value=id;
   document.getElementById('e-first').value=m.first||'';
   document.getElementById('e-last').value=m.last||'';
@@ -1493,7 +1529,7 @@ async function saveEdit(){
   const first=document.getElementById('e-first').value.trim(),last=document.getElementById('e-last').value.trim();
   if(!first||!last){ showToast('⚠️ First & last name required!','error'); return; }
   const m=members.find(x=>x.id==currentEditId); if(!m) return;
-  const updated={...m,first,last,birth:parseInt(document.getElementById('e-birth').value)||m.birth,death:parseInt(document.getElementById('e-death').value)||null,gen:parseInt(document.getElementById('e-gen').value),role:document.getElementById('e-role').value,location:document.getElementById('e-loc').value||m.location,occupation:document.getElementById('e-occ').value||m.occupation,hobby:document.getElementById('e-hobby').value||m.hobby,bio:document.getElementById('e-bio').value||m.bio,photo:photoData.edit||m.photo||null};
+  const updated={...m,first,last,birth:parseInt(document.getElementById('e-birth').value)||m.birth,death:parseInt(document.getElementById('e-death').value)||null,gen:parseInt(document.getElementById('e-gen').value),role:document.getElementById('e-role').value,location:document.getElementById('e-loc').value||m.location,occupation:document.getElementById('e-occ').value||m.occupation,hobby:document.getElementById('e-hobby').value||m.hobby,bio:document.getElementById('e-bio').value||m.bio,photo: editPhotoDeleted ? null : (photoData.edit || m.photo || null)
   await saveFS(currentEditId,updated);
   closeOverlay('edit-overlay');
   showToast(`✅ ${first} ${last} updated!`);
@@ -1558,14 +1594,54 @@ async function addSideMember(){
    PHOTO
 ══════════════════════════════════════════════════════ */
 function triggerUpload(id){ document.getElementById(id).click(); }
-function handlePhoto(event,previewId,areaId,type){
-  const file=event.target.files[0]; if(!file) return;
-  if(file.size>5*1024*1024){ showToast('⚠️ Max 5MB','error'); return; }
-  const reader=new FileReader();
-  reader.onload=e=>{ const data=e.target.result; document.getElementById(previewId).innerHTML=`<img src="${data}" alt="preview"/>`; document.getElementById(areaId).classList.add('has-image'); photoData[type]=data; };
+
+function handlePhoto(event, previewId, areaId, type){
+  const file = event.target.files[0];
+  if(!file) return;
+  if(file.size > 5*1024*1024){ showToast('⚠️ Max 5MB image size','error'); return; }
+  const reader = new FileReader();
+  reader.onload = e => {
+    const data = e.target.result;
+    document.getElementById(previewId).innerHTML = `<img src="${data}" alt="preview"/>`;
+    document.getElementById(areaId).classList.add('has-image');
+    photoData[type] = data;
+    // Show the delete button
+    showDeletePhotoBtn(type, true);
+  };
   reader.readAsDataURL(file);
 }
-function resetPhoto(previewId,areaId){ document.getElementById(previewId).innerHTML='📷'; document.getElementById(areaId).classList.remove('has-image'); }
+
+function resetPhoto(previewId, areaId){
+  document.getElementById(previewId).innerHTML = '📷';
+  document.getElementById(areaId).classList.remove('has-image');
+}
+
+// ── NEW: Delete / Remove Photo ──
+function deletePhoto(event, previewId, areaId, type, inputId){
+  event.stopPropagation(); // prevent triggering file upload
+  // Clear preview
+  document.getElementById(previewId).innerHTML = '📷';
+  document.getElementById(areaId).classList.remove('has-image');
+  // Clear stored photo data
+  photoData[type] = null;
+  // Reset file input so same file can be re-uploaded
+  const input = document.getElementById(inputId);
+  if(input) input.value = '';
+  // Hide delete button
+  showDeletePhotoBtn(type, false);
+  // If editing an existing member, mark photo as removed
+  if(type === 'edit'){
+    editPhotoDeleted = true;
+  }
+  showToast('🗑️ Photo removed!');
+}
+
+// ── Show/hide the delete photo button ──
+function showDeletePhotoBtn(type, visible){
+  const btnId = `${type}-delete-photo-btn`;
+  const btn   = document.getElementById(btnId);
+  if(btn) btn.classList.toggle('visible', visible);
+}
 
 /* ══════════════════════════════════════════════════════
    SEARCH
