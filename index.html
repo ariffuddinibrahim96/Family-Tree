@@ -3,17 +3,14 @@
 <head>
   <meta charset="UTF-8"/>
   <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
-  <title>Family Tree - The Ariffuddin Family</title>
-  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+  <title>Family Tree - The Anderson Family</title>
   <style>
     *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
     :root {
       --gold:#f0c040; --gold2:#e0a020; --bg:#0a0c14;
       --surface:rgba(255,255,255,0.05); --border:rgba(240,192,64,0.25);
-      --text:#e8eaf0; --muted:#8890a8; --line:rgba(240,192,64,0.5);
+      --text:#e8eaf0; --muted:#8890a8;
       --glow:0 0 20px rgba(240,192,64,0.3); --radius:16px;
-      --red:rgba(255,80,80,0.85); --blue:rgba(80,180,255,0.85);
-      --green:rgba(80,220,160,0.85);
     }
     body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
     body::before {
@@ -33,37 +30,116 @@
     }
     #app { position:relative; z-index:1; }
 
-    /* ===== HEADER ===== */
-    header { text-align:center; padding:3rem 2rem 2rem; }
+    /* ── LOGIN SCREEN ── */
+    #login-screen {
+      position:fixed; inset:0; z-index:500;
+      background:radial-gradient(ellipse 100% 100% at 50% 50%,#0d1020 0%,#060810 100%);
+      display:flex; align-items:center; justify-content:center; padding:1rem;
+    }
+    #login-screen.hidden { display:none; }
+    .login-box {
+      background:rgba(255,255,255,0.04); border:1px solid var(--border);
+      border-radius:24px; padding:3rem 2.5rem; width:100%; max-width:420px;
+      backdrop-filter:blur(20px); text-align:center;
+      box-shadow:0 40px 80px rgba(0,0,0,0.6), var(--glow);
+      animation:modalIn .5s cubic-bezier(.2,.8,.3,1) both;
+    }
+    @keyframes modalIn { from{opacity:0;transform:scale(.85) translateY(30px);}to{opacity:1;transform:scale(1) translateY(0);} }
+    .login-tree-icon { font-size:4rem; margin-bottom:1rem; animation:sway 3s ease-in-out infinite; }
+    @keyframes sway { 0%,100%{transform:rotate(-5deg);}50%{transform:rotate(5deg);} }
+    .login-title {
+      font-size:1.8rem; font-weight:800;
+      background:linear-gradient(135deg,#fff,var(--gold));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+      margin-bottom:0.25rem;
+    }
+    .login-subtitle { color:var(--muted); font-size:0.9rem; margin-bottom:2rem; }
+    .login-group { margin-bottom:1rem; text-align:left; }
+    .login-group label { display:block; font-size:0.78rem; color:var(--muted); margin-bottom:0.4rem; text-transform:uppercase; letter-spacing:1px; }
+    .login-group input {
+      width:100%; padding:0.75rem 1rem;
+      background:rgba(255,255,255,0.06); border:1px solid var(--border);
+      border-radius:12px; color:var(--text); font-size:0.95rem;
+      outline:none; transition:border-color .3s, box-shadow .3s;
+    }
+    .login-group input:focus { border-color:var(--gold); box-shadow:var(--glow); }
+    .login-btn {
+      width:100%; padding:0.85rem; border-radius:50px; border:none;
+      background:linear-gradient(135deg,var(--gold2),var(--gold));
+      color:#000; font-size:1rem; font-weight:700; cursor:pointer;
+      transition:all .3s; margin-top:0.5rem; letter-spacing:0.5px;
+    }
+    .login-btn:hover { transform:translateY(-2px); box-shadow:var(--glow); }
+    .login-btn:disabled { opacity:0.6; cursor:not-allowed; transform:none; }
+    .login-error {
+      background:rgba(255,80,80,0.1); border:1px solid rgba(255,80,80,0.3);
+      border-radius:10px; padding:0.6rem 1rem; color:#ff8080;
+      font-size:0.85rem; margin-bottom:1rem; display:none;
+    }
+    .login-error.show { display:block; }
+    .login-footer { margin-top:1.5rem; color:var(--muted); font-size:0.78rem; }
+    .login-loading { display:flex; align-items:center; justify-content:center; gap:0.5rem; }
+    .spinner { width:18px; height:18px; border:2px solid rgba(0,0,0,0.3); border-top-color:#000; border-radius:50%; animation:spin .6s linear infinite; }
+    @keyframes spin { to{transform:rotate(360deg);} }
+
+    /* ── TOP BAR (user info) ── */
+    .top-bar {
+      position:fixed; top:0; right:0; z-index:50;
+      display:flex; align-items:center; gap:0.75rem;
+      padding:0.75rem 1.5rem;
+    }
+    .user-badge {
+      display:flex; align-items:center; gap:0.5rem;
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:50px; padding:0.4rem 1rem;
+      backdrop-filter:blur(10px); font-size:0.82rem;
+    }
+    .user-dot { width:8px; height:8px; border-radius:50%; background:#4ade80; box-shadow:0 0 8px #4ade80; }
+    .signout-btn {
+      padding:0.4rem 1rem; border-radius:50px;
+      background:rgba(255,80,80,0.1); border:1px solid rgba(255,80,80,0.3);
+      color:#ff8080; font-size:0.8rem; cursor:pointer; transition:all .3s;
+    }
+    .signout-btn:hover { background:rgba(255,80,80,0.2); }
+
+    /* ── SYNC INDICATOR ── */
+    .sync-badge {
+      position:fixed; top:0; left:50%; transform:translateX(-50%);
+      z-index:50; padding:0.3rem 1.2rem;
+      border-radius:0 0 12px 12px; font-size:0.75rem; font-weight:600;
+      transition:all .3s; backdrop-filter:blur(10px);
+    }
+    .sync-badge.syncing { background:rgba(240,192,64,0.15); border:1px solid rgba(240,192,64,0.3); border-top:none; color:var(--gold); }
+    .sync-badge.saved   { background:rgba(80,220,160,0.15); border:1px solid rgba(80,220,160,0.3); border-top:none; color:#4ade80; }
+    .sync-badge.offline { background:rgba(255,80,80,0.15);  border:1px solid rgba(255,80,80,0.3);  border-top:none; color:#ff8080; }
+    .sync-badge.hidden  { display:none; }
+
+    /* ── HEADER ── */
+    header { text-align:center; padding:5rem 2rem 2rem; }
     .header-badge {
-      display:inline-block; padding:4px 18px;
-      border:1px solid var(--border); border-radius:50px;
-      font-size:0.75rem; letter-spacing:3px; text-transform:uppercase;
+      display:inline-block; padding:4px 18px; border:1px solid var(--border);
+      border-radius:50px; font-size:0.75rem; letter-spacing:3px; text-transform:uppercase;
       color:var(--gold); margin-bottom:1rem; background:rgba(240,192,64,0.05);
     }
     header h1 {
       font-size:clamp(2rem,5vw,3.5rem); font-weight:800; letter-spacing:-1px;
       background:linear-gradient(135deg,#fff 30%,var(--gold) 70%);
-      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
-      background-clip:text; line-height:1.1;
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
     }
     header p { color:var(--muted); margin-top:0.75rem; font-size:1rem; }
     .stats-bar { display:flex; justify-content:center; gap:2rem; margin-top:1.5rem; flex-wrap:wrap; }
-    .stat-item {
-      text-align:center; background:var(--surface); border:1px solid var(--border);
-      border-radius:12px; padding:0.6rem 1.4rem; backdrop-filter:blur(10px);
-    }
+    .stat-item { text-align:center; background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:0.6rem 1.4rem; backdrop-filter:blur(10px); }
     .stat-num { font-size:1.5rem; font-weight:700; color:var(--gold); }
     .stat-label { font-size:0.72rem; color:var(--muted); letter-spacing:1px; text-transform:uppercase; }
 
-    /* ===== TOOLBAR ===== */
+    /* ── TOOLBAR ── */
     .toolbar { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1rem 2rem; flex-wrap:wrap; }
     .search-wrap { position:relative; width:260px; }
     .search-wrap input {
       width:100%; padding:0.6rem 1rem 0.6rem 2.5rem;
       background:var(--surface); border:1px solid var(--border);
       border-radius:50px; color:var(--text); font-size:0.9rem;
-      outline:none; transition:border-color .3s,box-shadow .3s; backdrop-filter:blur(10px);
+      outline:none; transition:border-color .3s; backdrop-filter:blur(10px);
     }
     .search-wrap input:focus { border-color:var(--gold); box-shadow:var(--glow); }
     .search-wrap .icon { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--muted); }
@@ -76,44 +152,51 @@
     .btn:hover { background:rgba(240,192,64,0.15); border-color:var(--gold); color:var(--gold); }
     .btn.primary { background:linear-gradient(135deg,var(--gold2),var(--gold)); color:#000; border-color:transparent; font-weight:600; }
     .btn.primary:hover { transform:translateY(-2px); box-shadow:var(--glow); color:#000; }
-    .btn.danger { border-color:rgba(255,80,80,0.4); }
     .btn.danger:hover { background:rgba(255,80,80,0.15); border-color:#ff5050; color:#ff5050; }
-    .btn.success { border-color:rgba(80,220,160,0.4); }
     .btn.success:hover { background:rgba(80,220,160,0.15); border-color:#4ade80; color:#4ade80; }
 
-    /* ===== TREE CONTAINER ===== */
+    /* ── TREE ── */
     #tree-container { position:relative; width:100%; overflow:auto; padding:2rem 1rem 4rem; min-height:400px; }
-    #tree-svg { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; }
+    #tree-svg { position:absolute; top:0; left:0; pointer-events:none; z-index:0; }
     #tree-inner { position:relative; z-index:1; min-width:1000px; }
 
-    /* ===== GENERATION ROW ===== */
-    .gen-section { margin-bottom:0; }
-    .gen-label {
-      text-align:center; font-size:0.72rem; letter-spacing:2px;
-      text-transform:uppercase; color:var(--gold); opacity:0.7; margin-bottom:0.5rem; padding-top:0.5rem;
+    /* ── LOADING OVERLAY ── */
+    #loading-overlay {
+      position:fixed; inset:0; z-index:400; background:rgba(10,12,20,0.92);
+      display:flex; flex-direction:column; align-items:center; justify-content:center; gap:1rem;
     }
-    .gen-row {
-      display:flex; justify-content:center; gap:2.5rem; flex-wrap:wrap;
-      padding:0.5rem 2rem; align-items:flex-start;
-    }
+    #loading-overlay.hidden { display:none; }
+    .loading-tree { font-size:4rem; animation:pulse 1.2s ease-in-out infinite; }
+    @keyframes pulse { 0%,100%{transform:scale(1);}50%{transform:scale(1.15);} }
+    .loading-text { color:var(--gold); font-size:1rem; letter-spacing:2px; }
+    .loading-bar { width:200px; height:3px; background:rgba(240,192,64,0.2); border-radius:2px; overflow:hidden; }
+    .loading-fill { height:100%; background:var(--gold); border-radius:2px; animation:fill 1.5s ease-in-out infinite; }
+    @keyframes fill { 0%{width:0;margin-left:0;}50%{width:100%;margin-left:0;}100%{width:0;margin-left:100%;} }
 
-    /* ===== MEMBER WRAPPER (Card + Side Buttons) ===== */
-    .member-wrapper {
-      display:flex; align-items:center; gap:0.5rem; position:relative;
-    }
+    /* ── EMPTY STATE ── */
+    .empty-state { text-align:center; padding:4rem 2rem; color:var(--muted); }
+    .empty-state .icon { font-size:4rem; margin-bottom:1rem; opacity:0.5; }
+    .empty-state h3 { font-size:1.2rem; margin-bottom:0.5rem; color:var(--text); }
+
+    /* ── GEN ROWS ── */
+    .gen-section { margin-bottom:0; }
+    .gen-label { text-align:center; font-size:0.72rem; letter-spacing:2px; text-transform:uppercase; color:var(--gold); opacity:0.7; margin-bottom:0.5rem; padding-top:0.5rem; }
+    .gen-row { display:flex; justify-content:center; gap:2.5rem; flex-wrap:wrap; padding:0.5rem 2rem; align-items:flex-start; }
+    .gen-spacer { height:60px; }
+
+    /* ── MEMBER WRAPPER ── */
+    .member-wrapper { display:flex; align-items:center; gap:0.5rem; position:relative; }
     .side-add-btn {
       width:32px; height:32px; border-radius:50%;
       background:rgba(80,220,160,0.1); border:1px dashed rgba(80,220,160,0.5);
-      color:#4ade80; cursor:pointer; display:flex; align-items:center;
-      justify-content:center; font-size:1rem; transition:all .3s;
-      opacity:0; flex-shrink:0;
+      color:#4ade80; cursor:pointer; display:flex; align-items:center; justify-content:center;
+      font-size:0.9rem; transition:all .3s; opacity:0; flex-shrink:0;
     }
     .member-wrapper:hover .side-add-btn { opacity:1; }
     .side-add-btn:hover { background:rgba(80,220,160,0.25); transform:scale(1.1); }
     .side-add-btn.left { order:-1; }
-    .side-add-btn.right { order:1; }
 
-    /* ===== MEMBER CARD ===== */
+    /* ── MEMBER CARD ── */
     .member-card {
       width:155px; background:var(--surface); border:1px solid var(--border);
       border-radius:var(--radius); padding:1.2rem 1rem 0.8rem; text-align:center;
@@ -122,64 +205,25 @@
       animation:cardIn .5s ease both;
     }
     @keyframes cardIn { from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);} }
-    .member-card::before {
-      content:''; position:absolute; inset:0;
-      background:linear-gradient(135deg,rgba(240,192,64,0.07) 0%,transparent 60%);
-      opacity:0; transition:opacity .3s;
-    }
+    .member-card::before { content:''; position:absolute; inset:0; background:linear-gradient(135deg,rgba(240,192,64,0.07) 0%,transparent 60%); opacity:0; transition:opacity .3s; }
     .member-card:hover::before { opacity:1; }
     .member-card:hover { transform:translateY(-6px) scale(1.02); box-shadow:0 20px 40px rgba(0,0,0,0.5),var(--glow); border-color:var(--gold); }
     .member-card.highlight { border-color:var(--gold); box-shadow:var(--glow); }
     .member-card.dimmed { opacity:0.3; }
-
-    /* Card Action Buttons */
-    .card-actions {
-      display:flex; gap:0.3rem; justify-content:center;
-      margin-top:0.6rem; opacity:0; transition:opacity .3s;
-    }
+    .card-actions { display:flex; gap:0.3rem; justify-content:center; margin-top:0.6rem; opacity:0; transition:opacity .3s; }
     .member-card:hover .card-actions { opacity:1; }
-    .card-btn {
-      padding:3px 8px; border-radius:8px; border:1px solid transparent;
-      font-size:0.65rem; cursor:pointer; transition:all .2s; font-weight:600;
-      letter-spacing:0.3px;
-    }
-    .card-btn.edit-btn {
-      background:rgba(80,180,255,0.15); border-color:rgba(80,180,255,0.4); color:#50b4ff;
-    }
-    .card-btn.edit-btn:hover { background:rgba(80,180,255,0.3); }
-    .card-btn.delete-btn {
-      background:rgba(255,80,80,0.15); border-color:rgba(255,80,80,0.4); color:#ff5050;
-    }
-    .card-btn.delete-btn:hover { background:rgba(255,80,80,0.3); }
-    .card-btn.view-btn {
-      background:rgba(240,192,64,0.15); border-color:rgba(240,192,64,0.4); color:var(--gold);
-    }
-    .card-btn.view-btn:hover { background:rgba(240,192,64,0.3); }
-
-    /* Avatar */
-    .avatar {
-      width:64px; height:64px; border-radius:50%; margin:0 auto 0.75rem;
-      display:flex; align-items:center; justify-content:center;
-      font-size:1.4rem; font-weight:700; color:#000;
-      position:relative; border:2px solid var(--border); transition:border-color .3s;
-      overflow:hidden;
-    }
+    .card-btn { padding:3px 8px; border-radius:8px; border:1px solid transparent; font-size:0.63rem; cursor:pointer; transition:all .2s; font-weight:600; }
+    .card-btn.edit-btn   { background:rgba(80,180,255,0.15); border-color:rgba(80,180,255,0.4); color:#50b4ff; }
+    .card-btn.delete-btn { background:rgba(255,80,80,0.15);  border-color:rgba(255,80,80,0.4);  color:#ff5050; }
+    .card-btn.view-btn   { background:rgba(240,192,64,0.15); border-color:rgba(240,192,64,0.4); color:var(--gold); }
+    .card-btn:hover { filter:brightness(1.3); }
+    .avatar { width:64px; height:64px; border-radius:50%; margin:0 auto 0.75rem; display:flex; align-items:center; justify-content:center; font-size:1.4rem; font-weight:700; color:#000; position:relative; border:2px solid var(--border); transition:border-color .3s; overflow:hidden; }
     .member-card:hover .avatar { border-color:var(--gold); }
     .avatar img { width:100%; height:100%; object-fit:cover; position:absolute; inset:0; border-radius:50%; }
-    .avatar-ring {
-      position:absolute; inset:-4px; border-radius:50%;
-      border:2px solid transparent;
-      background:linear-gradient(135deg,var(--gold),transparent) border-box;
-      -webkit-mask:linear-gradient(#fff 0 0) padding-box,linear-gradient(#fff 0 0);
-      -webkit-mask-composite:destination-out; mask-composite:exclude;
-    }
+    .avatar-ring { position:absolute; inset:-4px; border-radius:50%; border:2px solid transparent; background:linear-gradient(135deg,var(--gold),transparent) border-box; -webkit-mask:linear-gradient(#fff 0 0) padding-box,linear-gradient(#fff 0 0); -webkit-mask-composite:destination-out; mask-composite:exclude; }
     .member-name { font-size:0.85rem; font-weight:600; color:#fff; line-height:1.2; margin-bottom:0.25rem; }
     .member-year { font-size:0.72rem; color:var(--muted); }
-    .member-role {
-      display:inline-block; margin-top:0.4rem; padding:2px 10px;
-      border-radius:20px; font-size:0.63rem; letter-spacing:0.5px;
-      font-weight:600; text-transform:uppercase;
-    }
+    .member-role { display:inline-block; margin-top:0.4rem; padding:2px 10px; border-radius:20px; font-size:0.63rem; font-weight:600; text-transform:uppercase; }
     .role-patriarch  { background:rgba(255,165,0,0.2);  color:#ffa500; }
     .role-matriarch  { background:rgba(255,100,150,0.2); color:#ff7eb3; }
     .role-son        { background:rgba(80,180,255,0.2);  color:#50b4ff; }
@@ -190,98 +234,40 @@
     .role-greatgrand { background:rgba(100,220,255,0.2); color:#67e8f9; }
     .role-g6member   { background:rgba(255,150,200,0.2); color:#f9a8d4; }
     .role-spouse     { background:rgba(160,220,100,0.2); color:#a3e635; }
+    .edited-badge { position:absolute; top:6px; right:6px; width:8px; height:8px; border-radius:50%; background:var(--gold); box-shadow:0 0 6px var(--gold); }
 
-    /* Spacer row between gens */
-    .gen-spacer { height:60px; }
-
-    /* ===== MODALS BASE ===== */
-    .overlay {
-      position:fixed; inset:0; z-index:100; background:rgba(0,0,0,0.8);
-      backdrop-filter:blur(8px); display:none; align-items:center;
-      justify-content:center; padding:1rem;
-    }
+    /* ── MODALS ── */
+    .overlay { position:fixed; inset:0; z-index:100; background:rgba(0,0,0,0.8); backdrop-filter:blur(8px); display:none; align-items:center; justify-content:center; padding:1rem; }
     .overlay.open { display:flex; }
-    .modal-box {
-      background:linear-gradient(135deg,#131828 0%,#0e1420 100%);
-      border:1px solid var(--border); border-radius:24px; padding:2.5rem;
-      width:100%; max-width:500px; position:relative;
-      animation:modalIn .35s cubic-bezier(.2,.8,.3,1) both;
-      box-shadow:0 40px 80px rgba(0,0,0,0.6),var(--glow);
-      max-height:90vh; overflow-y:auto;
-    }
-    @keyframes modalIn { from{opacity:0;transform:scale(.85) translateY(30px);}to{opacity:1;transform:scale(1) translateY(0);} }
-    .modal-close-btn {
-      position:absolute; top:1rem; right:1rem;
-      width:32px; height:32px; border-radius:50%;
-      background:var(--surface); border:1px solid var(--border);
-      color:var(--muted); cursor:pointer; display:flex;
-      align-items:center; justify-content:center; font-size:1rem; transition:all .2s;
-    }
+    .modal-box { background:linear-gradient(135deg,#131828 0%,#0e1420 100%); border:1px solid var(--border); border-radius:24px; padding:2.5rem; width:100%; max-width:500px; position:relative; animation:modalIn .35s cubic-bezier(.2,.8,.3,1) both; box-shadow:0 40px 80px rgba(0,0,0,0.6),var(--glow); max-height:90vh; overflow-y:auto; }
+    .modal-close-btn { position:absolute; top:1rem; right:1rem; width:32px; height:32px; border-radius:50%; background:var(--surface); border:1px solid var(--border); color:var(--muted); cursor:pointer; display:flex; align-items:center; justify-content:center; font-size:1rem; transition:all .2s; }
     .modal-close-btn:hover { background:rgba(255,80,80,0.2); color:#ff6060; border-color:#ff6060; }
-    .modal-title {
-      font-size:1.5rem; font-weight:700; margin-bottom:1.5rem;
-      background:linear-gradient(135deg,#fff,var(--gold));
-      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
-    }
-
-    /* ===== FORM STYLES ===== */
+    .modal-title { font-size:1.5rem; font-weight:700; margin-bottom:1.5rem; background:linear-gradient(135deg,#fff,var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
     .form-group { margin-bottom:1rem; }
-    .form-group label {
-      display:block; font-size:0.78rem; color:var(--muted);
-      margin-bottom:0.4rem; text-transform:uppercase; letter-spacing:1px;
-    }
-    .form-group input,
-    .form-group select,
-    .form-group textarea {
-      width:100%; padding:0.65rem 1rem;
-      background:var(--surface); border:1px solid var(--border);
-      border-radius:10px; color:var(--text); font-size:0.9rem;
-      outline:none; transition:border-color .3s; font-family:inherit;
-    }
-    .form-group input:focus,
-    .form-group select:focus,
-    .form-group textarea:focus { border-color:var(--gold); }
+    .form-group label { display:block; font-size:0.78rem; color:var(--muted); margin-bottom:0.4rem; text-transform:uppercase; letter-spacing:1px; }
+    .form-group input, .form-group select, .form-group textarea { width:100%; padding:0.65rem 1rem; background:var(--surface); border:1px solid var(--border); border-radius:10px; color:var(--text); font-size:0.9rem; outline:none; transition:border-color .3s; font-family:inherit; }
+    .form-group input:focus, .form-group select:focus, .form-group textarea:focus { border-color:var(--gold); }
     .form-group select option { background:#131828; }
     .form-group textarea { resize:vertical; min-height:80px; }
     .form-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
     .form-actions { display:flex; gap:1rem; margin-top:1.5rem; }
     .form-actions .btn { flex:1; justify-content:center; }
 
-    /* ===== PHOTO UPLOAD ===== */
-    .photo-upload-area {
-      border:2px dashed var(--border); border-radius:16px; padding:1.5rem;
-      text-align:center; cursor:pointer; transition:all .3s; position:relative;
-      margin-bottom:1rem;
-    }
+    /* Photo Upload */
+    .photo-upload-area { border:2px dashed var(--border); border-radius:16px; padding:1.5rem; text-align:center; cursor:pointer; transition:all .3s; position:relative; margin-bottom:1rem; }
     .photo-upload-area:hover { border-color:var(--gold); background:rgba(240,192,64,0.05); }
     .photo-upload-area.has-image { border-color:var(--gold); border-style:solid; }
     .photo-upload-area input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
-    .photo-preview {
-      width:80px; height:80px; border-radius:50%; margin:0 auto 0.75rem;
-      overflow:hidden; border:3px solid var(--gold);
-      display:flex; align-items:center; justify-content:center;
-      background:var(--surface); font-size:2rem;
-    }
+    .photo-preview { width:80px; height:80px; border-radius:50%; margin:0 auto 0.75rem; overflow:hidden; border:3px solid var(--gold); display:flex; align-items:center; justify-content:center; background:var(--surface); font-size:2rem; }
     .photo-preview img { width:100%; height:100%; object-fit:cover; }
     .upload-text { font-size:0.85rem; color:var(--muted); }
     .upload-text span { color:var(--gold); font-weight:600; }
-    .upload-hint { font-size:0.72rem; color:var(--muted); margin-top:0.25rem; }
 
-    /* ===== VIEW MODAL ===== */
+    /* View Modal */
     .view-modal-box { max-width:480px; }
-    .modal-avatar-lg {
-      width:90px; height:90px; border-radius:50%; margin:0 auto 1.5rem;
-      display:flex; align-items:center; justify-content:center;
-      font-size:2rem; font-weight:800; color:#000;
-      border:3px solid var(--gold); box-shadow:0 0 30px rgba(240,192,64,0.4);
-      overflow:hidden;
-    }
+    .modal-avatar-lg { width:90px; height:90px; border-radius:50%; margin:0 auto 1.5rem; display:flex; align-items:center; justify-content:center; font-size:2rem; font-weight:800; color:#000; border:3px solid var(--gold); box-shadow:0 0 30px rgba(240,192,64,0.4); overflow:hidden; }
     .modal-avatar-lg img { width:100%; height:100%; object-fit:cover; }
-    .modal-member-name {
-      font-size:1.6rem; font-weight:700; text-align:center;
-      background:linear-gradient(135deg,#fff,var(--gold));
-      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
-    }
+    .modal-member-name { font-size:1.6rem; font-weight:700; text-align:center; background:linear-gradient(135deg,#fff,var(--gold)); -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text; }
     .modal-role-center { text-align:center; margin:0.5rem 0 1.5rem; }
     .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-top:1rem; }
     .info-item { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:0.75rem 1rem; }
@@ -292,82 +278,115 @@
     .view-actions { display:flex; gap:0.75rem; margin-top:1.5rem; }
     .view-actions .btn { flex:1; justify-content:center; }
 
-    /* ===== DELETE CONFIRM MODAL ===== */
+    /* Delete Modal */
     .delete-modal-box { max-width:400px; text-align:center; }
     .delete-icon { font-size:3.5rem; margin-bottom:1rem; }
     .delete-modal-box h2 { font-size:1.4rem; font-weight:700; margin-bottom:0.5rem; color:#fff; }
     .delete-modal-box p { color:var(--muted); font-size:0.9rem; margin-bottom:1.5rem; line-height:1.5; }
     .delete-name-highlight { color:var(--gold); font-weight:700; }
 
-    /* ===== SIDE ADD MODAL ===== */
-    .side-info-banner {
-      background:rgba(80,220,160,0.08); border:1px solid rgba(80,220,160,0.3);
-      border-radius:12px; padding:0.75rem 1rem; margin-bottom:1.2rem;
-      font-size:0.82rem; color:#4ade80; display:flex; align-items:center; gap:0.5rem;
-    }
+    /* Side Modal */
+    .side-info-banner { background:rgba(80,220,160,0.08); border:1px solid rgba(80,220,160,0.3); border-radius:12px; padding:0.75rem 1rem; margin-bottom:1.2rem; font-size:0.82rem; color:#4ade80; }
 
-    /* ===== LEGEND ===== */
-    .legend { display:flex; justify-content:center; gap:1.5rem; flex-wrap:wrap; padding:1rem 2rem 2rem; }
+    /* Activity Log */
+    #activity-panel { position:fixed; bottom:0; left:0; right:0; z-index:40; background:rgba(10,12,20,0.95); border-top:1px solid var(--border); backdrop-filter:blur(20px); transition:transform .3s; transform:translateY(calc(100% - 42px)); }
+    #activity-panel.expanded { transform:translateY(0); }
+    .activity-tab { display:flex; align-items:center; justify-content:space-between; padding:0.6rem 1.5rem; cursor:pointer; user-select:none; }
+    .activity-tab span { font-size:0.82rem; color:var(--muted); }
+    .activity-tab .pulse-dot { width:8px; height:8px; border-radius:50%; background:#4ade80; box-shadow:0 0 8px #4ade80; animation:pulseDot 2s infinite; }
+    @keyframes pulseDot { 0%,100%{opacity:1;}50%{opacity:0.3;} }
+    .activity-list { max-height:180px; overflow-y:auto; padding:0.5rem 1.5rem 1rem; }
+    .activity-item { display:flex; align-items:center; gap:0.75rem; padding:0.4rem 0; border-bottom:1px solid rgba(255,255,255,0.04); font-size:0.8rem; color:var(--muted); }
+    .activity-item:last-child { border-bottom:none; }
+    .activity-icon { font-size:1rem; flex-shrink:0; }
+    .activity-text { flex:1; }
+    .activity-time { font-size:0.7rem; color:rgba(136,144,168,0.6); white-space:nowrap; }
+
+    /* Legend */
+    .legend { display:flex; justify-content:center; gap:1.5rem; flex-wrap:wrap; padding:1rem 2rem 5rem; }
     .legend-item { display:flex; align-items:center; gap:0.4rem; font-size:0.78rem; color:var(--muted); }
     .legend-dot { width:10px; height:10px; border-radius:50%; }
 
-    /* ===== ZOOM ===== */
-    .zoom-controls { position:fixed; bottom:2rem; right:2rem; display:flex; flex-direction:column; gap:0.5rem; z-index:10; }
-    .zoom-btn {
-      width:44px; height:44px; border-radius:50%;
-      background:var(--surface); border:1px solid var(--border);
-      color:var(--text); font-size:1.2rem; cursor:pointer;
-      display:flex; align-items:center; justify-content:center;
-      transition:all .3s; backdrop-filter:blur(10px);
-    }
+    /* Zoom */
+    .zoom-controls { position:fixed; bottom:5rem; right:2rem; display:flex; flex-direction:column; gap:0.5rem; z-index:10; }
+    .zoom-btn { width:44px; height:44px; border-radius:50%; background:var(--surface); border:1px solid var(--border); color:var(--text); font-size:1.2rem; cursor:pointer; display:flex; align-items:center; justify-content:center; transition:all .3s; backdrop-filter:blur(10px); }
     .zoom-btn:hover { background:rgba(240,192,64,0.2); border-color:var(--gold); color:var(--gold); }
 
-    /* ===== TOAST ===== */
-    #toast {
-      position:fixed; bottom:2rem; left:50%; transform:translateX(-50%);
-      background:linear-gradient(135deg,var(--gold2),var(--gold));
-      color:#000; padding:0.75rem 1.5rem; border-radius:50px;
-      font-size:0.9rem; font-weight:600; z-index:999;
-      opacity:0; pointer-events:none; transition:opacity .3s;
-      box-shadow:var(--glow); white-space:nowrap;
-    }
+    /* Toast */
+    #toast { position:fixed; bottom:6rem; left:50%; transform:translateX(-50%); background:linear-gradient(135deg,var(--gold2),var(--gold)); color:#000; padding:0.75rem 1.5rem; border-radius:50px; font-size:0.9rem; font-weight:600; z-index:999; opacity:0; pointer-events:none; transition:opacity .3s; box-shadow:var(--glow); white-space:nowrap; }
     #toast.show { opacity:1; }
-    #toast.error-toast {
-      background:linear-gradient(135deg,#c02020,#ff4040); color:#fff;
-    }
+    #toast.error-toast { background:linear-gradient(135deg,#c02020,#ff4040); color:#fff; }
 
-    /* Scrollbar */
     ::-webkit-scrollbar { width:6px; height:6px; }
     ::-webkit-scrollbar-track { background:#0a0c14; }
     ::-webkit-scrollbar-thumb { background:rgba(240,192,64,0.3); border-radius:3px; }
-    ::-webkit-scrollbar-thumb:hover { background:var(--gold); }
 
     @media(max-width:600px) {
       .member-card { width:120px; padding:0.9rem 0.6rem; }
       .avatar { width:50px; height:50px; font-size:1rem; }
       .gen-row { gap:0.75rem; }
-      .side-add-btn { width:26px; height:26px; font-size:0.8rem; opacity:1; }
+      .top-bar { padding:0.5rem 1rem; }
+      .card-actions { opacity:1; }
+      .side-add-btn { opacity:1; }
     }
   </style>
 </head>
 <body>
 <div id="particles"></div>
-<div id="app">
 
-  <!-- HEADER -->
+<!-- ═══ LOGIN SCREEN ═══ -->
+<div id="login-screen">
+  <div class="login-box">
+    <div class="login-tree-icon">🌳</div>
+    <div class="login-title">Family Tree</div>
+    <div class="login-subtitle">Sign in to view & edit your family tree</div>
+    <div class="login-error" id="login-error"></div>
+    <div class="login-group">
+      <label>Email Address</label>
+      <input type="email" id="login-email" placeholder="yourname@email.com" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <div class="login-group">
+      <label>Password</label>
+      <input type="password" id="login-password" placeholder="Enter your password" onkeydown="if(event.key==='Enter')doLogin()"/>
+    </div>
+    <button class="login-btn" id="login-btn" onclick="doLogin()">🔑 Sign In</button>
+    <div class="login-footer">Only family members with an account can access this tree.<br/>Contact the admin to get your login details.</div>
+  </div>
+</div>
+
+<!-- ═══ LOADING ═══ -->
+<div id="loading-overlay">
+  <div class="loading-tree">🌳</div>
+  <div class="loading-text">Loading Family Tree…</div>
+  <div class="loading-bar"><div class="loading-fill"></div></div>
+</div>
+
+<!-- ═══ SYNC BADGE ═══ -->
+<div class="sync-badge hidden" id="sync-badge"></div>
+
+<!-- ═══ TOP BAR ═══ -->
+<div class="top-bar" id="top-bar" style="display:none">
+  <div class="user-badge">
+    <div class="user-dot"></div>
+    <span id="user-email-display">—</span>
+  </div>
+  <button class="signout-btn" onclick="doSignOut()">Sign Out</button>
+</div>
+
+<!-- ═══ MAIN APP ═══ -->
+<div id="app">
   <header>
-    <div class="header-badge">🌳 Family Heritage Baby</div>
-    <h1>The Ariffuddin Family</h1>
-    <p>Yeehaaaa</p>
+    <div class="header-badge">🌳 Family Heritage</div>
+    <h1 id="family-title">The Anderson Family</h1>
+    <p>Six generations of love, legacy & memories</p>
     <div class="stats-bar">
-      <div class="stat-item"><div class="stat-num" id="stat-members">0</div><div class="stat-label">Members</div></div>
-      <div class="stat-item"><div class="stat-num" id="stat-gens">6</div><div class="stat-label">Generations</div></div>
+      <div class="stat-item"><div class="stat-num" id="stat-members">—</div><div class="stat-label">Members</div></div>
+      <div class="stat-item"><div class="stat-num" id="stat-gens">—</div><div class="stat-label">Generations</div></div>
       <div class="stat-item"><div class="stat-num">1940</div><div class="stat-label">Since</div></div>
-      <div class="stat-item"><div class="stat-num" id="stat-marriages">0</div><div class="stat-label">Marriages</div></div>
+      <div class="stat-item"><div class="stat-num" id="stat-marriages">—</div><div class="stat-label">Marriages</div></div>
     </div>
   </header>
 
-  <!-- TOOLBAR -->
   <div class="toolbar">
     <div class="search-wrap">
       <span class="icon">🔍</span>
@@ -378,13 +397,11 @@
     <button class="btn primary" onclick="openAddModal()">➕ Add Member</button>
   </div>
 
-  <!-- TREE -->
   <div id="tree-container">
     <svg id="tree-svg"></svg>
     <div id="tree-inner"></div>
   </div>
 
-  <!-- LEGEND -->
   <div class="legend">
     <div class="legend-item"><div class="legend-dot" style="background:#ffa500"></div>Patriarch</div>
     <div class="legend-item"><div class="legend-dot" style="background:#ff7eb3"></div>Matriarch</div>
@@ -399,16 +416,28 @@
   </div>
 </div>
 
-<!-- ZOOM -->
-<div class="zoom-controls">
-  <button class="zoom-btn" onclick="zoom(1.15)" title="Zoom In">＋</button>
-  <button class="zoom-btn" onclick="zoom(0.87)" title="Zoom Out">－</button>
-  <button class="zoom-btn" onclick="zoomReset()" title="Reset" style="font-size:0.8rem">↺</button>
+<!-- ═══ ACTIVITY LOG PANEL ═══ -->
+<div id="activity-panel">
+  <div class="activity-tab" onclick="toggleActivity()">
+    <div style="display:flex;align-items:center;gap:0.5rem;">
+      <div class="pulse-dot"></div>
+      <span>📋 Recent Activity</span>
+    </div>
+    <span id="activity-toggle-icon">▲</span>
+  </div>
+  <div class="activity-list" id="activity-list">
+    <div class="activity-item"><span class="activity-icon">⏳</span><span class="activity-text">Loading activity…</span></div>
+  </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     MODAL 1 — VIEW MEMBER
-═══════════════════════════════════════ -->
+<!-- ZOOM -->
+<div class="zoom-controls">
+  <button class="zoom-btn" onclick="zoom(1.15)">＋</button>
+  <button class="zoom-btn" onclick="zoom(0.87)">－</button>
+  <button class="zoom-btn" onclick="zoomReset()" style="font-size:0.8rem">↺</button>
+</div>
+
+<!-- ═══ VIEW MODAL ═══ -->
 <div id="view-overlay" class="overlay" onclick="overlayClick(event,'view-overlay')">
   <div class="modal-box view-modal-box">
     <button class="modal-close-btn" onclick="closeOverlay('view-overlay')">✕</button>
@@ -417,35 +446,29 @@
     <div class="modal-role-center" id="vm-role"></div>
     <div class="info-grid" id="vm-info"></div>
     <div class="view-actions">
-      <button class="btn success" id="vm-edit-btn" onclick="openEditFromView()">✏️ Edit</button>
-      <button class="btn danger"  id="vm-del-btn"  onclick="openDeleteFromView()">🗑️ Delete</button>
+      <button class="btn success" onclick="openEditFromView()">✏️ Edit</button>
+      <button class="btn danger"  onclick="openDeleteFromView()">🗑️ Delete</button>
     </div>
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     MODAL 2 — ADD MEMBER
-═══════════════════════════════════════ -->
+<!-- ═══ ADD MODAL ═══ -->
 <div id="add-overlay" class="overlay" onclick="overlayClick(event,'add-overlay')">
   <div class="modal-box">
     <button class="modal-close-btn" onclick="closeOverlay('add-overlay')">✕</button>
     <div class="modal-title">🌱 Add Family Member</div>
-
-    <!-- Photo Upload -->
     <div class="photo-upload-area" id="add-photo-area" onclick="triggerUpload('add-photo-input')">
-      <input type="file" id="add-photo-input" accept="image/*" onchange="handlePhotoUpload(event,'add-photo-preview','add-photo-area')" onclick="event.stopPropagation()"/>
+      <input type="file" id="add-photo-input" accept="image/*" onchange="handlePhoto(event,'add-photo-preview','add-photo-area','add')" onclick="event.stopPropagation()"/>
       <div class="photo-preview" id="add-photo-preview">📷</div>
       <div class="upload-text">Click to <span>Upload Photo</span></div>
-      <div class="upload-hint">JPG, PNG or GIF · Max 5MB</div>
     </div>
-
     <div class="form-row">
       <div class="form-group"><label>First Name *</label><input type="text" id="a-first" placeholder="John"/></div>
       <div class="form-group"><label>Last Name *</label><input type="text" id="a-last" placeholder="Anderson"/></div>
     </div>
     <div class="form-row">
       <div class="form-group"><label>Birth Year</label><input type="number" id="a-birth" placeholder="1990"/></div>
-      <div class="form-group"><label>Death Year</label><input type="number" id="a-death" placeholder="(if applicable)"/></div>
+      <div class="form-group"><label>Death Year</label><input type="number" id="a-death" placeholder="N/A"/></div>
     </div>
     <div class="form-row">
       <div class="form-group">
@@ -480,7 +503,7 @@
       <div class="form-group"><label>Occupation</label><input type="text" id="a-occ" placeholder="Engineer"/></div>
     </div>
     <div class="form-group"><label>Hobbies</label><input type="text" id="a-hobby" placeholder="Reading, Cooking…"/></div>
-    <div class="form-group"><label>About</label><textarea id="a-bio" placeholder="A few words about this family member…"></textarea></div>
+    <div class="form-group"><label>About</label><textarea id="a-bio" placeholder="A few words…"></textarea></div>
     <div class="form-actions">
       <button class="btn" onclick="closeOverlay('add-overlay')">Cancel</button>
       <button class="btn primary" onclick="addMember()">Add Member 🌱</button>
@@ -488,65 +511,51 @@
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     MODAL 3 — EDIT MEMBER
-═══════════════════════════════════════ -->
+<!-- ═══ EDIT MODAL ═══ -->
 <div id="edit-overlay" class="overlay" onclick="overlayClick(event,'edit-overlay')">
   <div class="modal-box">
     <button class="modal-close-btn" onclick="closeOverlay('edit-overlay')">✕</button>
     <div class="modal-title">✏️ Edit Family Member</div>
-
-    <!-- Photo Upload -->
     <div class="photo-upload-area" id="edit-photo-area" onclick="triggerUpload('edit-photo-input')">
-      <input type="file" id="edit-photo-input" accept="image/*" onchange="handlePhotoUpload(event,'edit-photo-preview','edit-photo-area')" onclick="event.stopPropagation()"/>
+      <input type="file" id="edit-photo-input" accept="image/*" onchange="handlePhoto(event,'edit-photo-preview','edit-photo-area','edit')" onclick="event.stopPropagation()"/>
       <div class="photo-preview" id="edit-photo-preview">📷</div>
       <div class="upload-text">Click to <span>Change Photo</span></div>
-      <div class="upload-hint">JPG, PNG or GIF · Max 5MB</div>
     </div>
-
     <input type="hidden" id="e-id"/>
     <div class="form-row">
-      <div class="form-group"><label>First Name *</label><input type="text" id="e-first" placeholder="John"/></div>
-      <div class="form-group"><label>Last Name *</label><input type="text" id="e-last" placeholder="Anderson"/></div>
+      <div class="form-group"><label>First Name *</label><input type="text" id="e-first"/></div>
+      <div class="form-group"><label>Last Name *</label><input type="text" id="e-last"/></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Birth Year</label><input type="number" id="e-birth" placeholder="1990"/></div>
-      <div class="form-group"><label>Death Year</label><input type="number" id="e-death" placeholder="(if applicable)"/></div>
+      <div class="form-group"><label>Birth Year</label><input type="number" id="e-birth"/></div>
+      <div class="form-group"><label>Death Year</label><input type="number" id="e-death" placeholder="N/A"/></div>
     </div>
     <div class="form-row">
       <div class="form-group">
         <label>Generation</label>
         <select id="e-gen">
-          <option value="1">Gen 1 – Founders</option>
-          <option value="2">Gen 2 – Parents</option>
-          <option value="3">Gen 3 – Children</option>
-          <option value="4">Gen 4 – Grandchildren</option>
-          <option value="5">Gen 5 – Great-Grandchildren</option>
-          <option value="6">Gen 6 – Next Generation</option>
+          <option value="1">Gen 1</option><option value="2">Gen 2</option>
+          <option value="3">Gen 3</option><option value="4">Gen 4</option>
+          <option value="5">Gen 5</option><option value="6">Gen 6</option>
         </select>
       </div>
       <div class="form-group">
         <label>Role</label>
         <select id="e-role">
-          <option value="patriarch">Patriarch</option>
-          <option value="matriarch">Matriarch</option>
-          <option value="son">Son</option>
-          <option value="daughter">Daughter</option>
-          <option value="husband">Husband</option>
-          <option value="wife">Wife</option>
-          <option value="grandchild">Grandchild</option>
-          <option value="greatgrand">Great-Grandchild</option>
-          <option value="g6member">Gen 6 Member</option>
-          <option value="spouse">Spouse</option>
+          <option value="patriarch">Patriarch</option><option value="matriarch">Matriarch</option>
+          <option value="son">Son</option><option value="daughter">Daughter</option>
+          <option value="husband">Husband</option><option value="wife">Wife</option>
+          <option value="grandchild">Grandchild</option><option value="greatgrand">Great-Grandchild</option>
+          <option value="g6member">Gen 6 Member</option><option value="spouse">Spouse</option>
         </select>
       </div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Location</label><input type="text" id="e-loc" placeholder="New York, USA"/></div>
-      <div class="form-group"><label>Occupation</label><input type="text" id="e-occ" placeholder="Engineer"/></div>
+      <div class="form-group"><label>Location</label><input type="text" id="e-loc"/></div>
+      <div class="form-group"><label>Occupation</label><input type="text" id="e-occ"/></div>
     </div>
-    <div class="form-group"><label>Hobbies</label><input type="text" id="e-hobby" placeholder="Reading, Cooking…"/></div>
-    <div class="form-group"><label>About</label><textarea id="e-bio" placeholder="About this family member…"></textarea></div>
+    <div class="form-group"><label>Hobbies</label><input type="text" id="e-hobby"/></div>
+    <div class="form-group"><label>About</label><textarea id="e-bio"></textarea></div>
     <div class="form-actions">
       <button class="btn" onclick="closeOverlay('edit-overlay')">Cancel</button>
       <button class="btn primary" onclick="saveEdit()">💾 Save Changes</button>
@@ -554,15 +563,13 @@
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     MODAL 4 — DELETE CONFIRM
-═══════════════════════════════════════ -->
+<!-- ═══ DELETE MODAL ═══ -->
 <div id="delete-overlay" class="overlay" onclick="overlayClick(event,'delete-overlay')">
   <div class="modal-box delete-modal-box">
     <button class="modal-close-btn" onclick="closeOverlay('delete-overlay')">✕</button>
     <div class="delete-icon">🗑️</div>
     <h2>Remove Family Member?</h2>
-    <p>Are you sure you want to remove <span class="delete-name-highlight" id="del-name"></span> from the family tree? This action cannot be undone.</p>
+    <p>Are you sure you want to remove <span class="delete-name-highlight" id="del-name"></span>? This cannot be undone.</p>
     <div class="form-actions">
       <button class="btn" onclick="closeOverlay('delete-overlay')">Cancel</button>
       <button class="btn danger" onclick="confirmDelete()" style="background:rgba(255,80,80,0.2);border-color:#ff5050;color:#ff5050;">🗑️ Yes, Remove</button>
@@ -570,48 +577,38 @@
   </div>
 </div>
 
-<!-- ═══════════════════════════════════════
-     MODAL 5 — ADD SIDE MEMBER (SPOUSE)
-═══════════════════════════════════════ -->
+<!-- ═══ SIDE MODAL ═══ -->
 <div id="side-overlay" class="overlay" onclick="overlayClick(event,'side-overlay')">
   <div class="modal-box">
     <button class="modal-close-btn" onclick="closeOverlay('side-overlay')">✕</button>
     <div class="modal-title">💑 Add Partner / Spouse</div>
-    <div class="side-info-banner">💡 This member will appear <strong id="side-position-label">beside</strong> <strong id="side-target-name">—</strong> as their partner.</div>
+    <div class="side-info-banner">💡 Adding partner beside <strong id="side-target-name">—</strong></div>
     <input type="hidden" id="s-linked-id"/>
-
-    <!-- Photo Upload -->
     <div class="photo-upload-area" id="side-photo-area" onclick="triggerUpload('side-photo-input')">
-      <input type="file" id="side-photo-input" accept="image/*" onchange="handlePhotoUpload(event,'side-photo-preview','side-photo-area')" onclick="event.stopPropagation()"/>
+      <input type="file" id="side-photo-input" accept="image/*" onchange="handlePhoto(event,'side-photo-preview','side-photo-area','side')" onclick="event.stopPropagation()"/>
       <div class="photo-preview" id="side-photo-preview">📷</div>
       <div class="upload-text">Click to <span>Upload Photo</span></div>
-      <div class="upload-hint">JPG, PNG or GIF · Max 5MB</div>
     </div>
-
     <div class="form-row">
       <div class="form-group"><label>First Name *</label><input type="text" id="s-first" placeholder="Jane"/></div>
       <div class="form-group"><label>Last Name *</label><input type="text" id="s-last" placeholder="Smith"/></div>
     </div>
     <div class="form-row">
-      <div class="form-group"><label>Birth Year</label><input type="number" id="s-birth" placeholder="1990"/></div>
-      <div class="form-group"><label>Death Year</label><input type="number" id="s-death" placeholder="(if applicable)"/></div>
-    </div>
-    <div class="form-row">
+      <div class="form-group"><label>Birth Year</label><input type="number" id="s-birth"/></div>
       <div class="form-group">
         <label>Role</label>
         <select id="s-role">
           <option value="wife">Wife</option>
           <option value="husband">Husband</option>
           <option value="spouse">Spouse / Partner</option>
-          <option value="matriarch">Matriarch</option>
-          <option value="patriarch">Patriarch</option>
         </select>
       </div>
-      <div class="form-group"><label>Location</label><input type="text" id="s-loc" placeholder="New York, USA"/></div>
     </div>
-    <div class="form-group"><label>Occupation</label><input type="text" id="s-occ" placeholder="Doctor"/></div>
-    <div class="form-group"><label>Hobbies</label><input type="text" id="s-hobby" placeholder="Cooking, Gardening…"/></div>
-    <div class="form-group"><label>About</label><textarea id="s-bio" placeholder="About this person…"></textarea></div>
+    <div class="form-row">
+      <div class="form-group"><label>Location</label><input type="text" id="s-loc"/></div>
+      <div class="form-group"><label>Occupation</label><input type="text" id="s-occ"/></div>
+    </div>
+    <div class="form-group"><label>About</label><textarea id="s-bio"></textarea></div>
     <div class="form-actions">
       <button class="btn" onclick="closeOverlay('side-overlay')">Cancel</button>
       <button class="btn primary" onclick="addSideMember()">💑 Add Partner</button>
@@ -619,585 +616,678 @@
   </div>
 </div>
 
-<!-- TOAST -->
 <div id="toast"></div>
 
+<!-- ═══════════════════════════════════════════════
+     FIREBASE SDKs
+═══════════════════════════════════════════════ -->
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-app-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-firestore-compat.js"></script>
+<script src="https://www.gstatic.com/firebasejs/10.7.1/firebase-auth-compat.js"></script>
+
 <script>
-/* ════════════════════════════════════════════════
-   DATA
-════════════════════════════════════════════════ */
-let members = [
-  // GEN 1
-  { id:1,gen:1,first:"Robert",last:"Anderson",birth:1940,death:null,gender:"male",role:"patriarch",location:"Boston, MA",occupation:"Retired Engineer",spouseId:2,parents:[],children:[3,5],bio:"Founding patriarch. Served in the military and built a successful engineering career.",hobby:"Woodworking, Chess",photo:null },
-  { id:2,gen:1,first:"Margaret",last:"Anderson",birth:1942,death:null,gender:"female",role:"matriarch",location:"Boston, MA",occupation:"Retired Teacher",spouseId:1,parents:[],children:[3,5],bio:"Beloved kindergarten teacher for 30 years. Known for her apple pies and warm heart.",hobby:"Gardening, Reading",photo:null },
-  // GEN 2
-  { id:3,gen:2,first:"William",last:"Anderson",birth:1965,death:null,gender:"male",role:"son",location:"New York, NY",occupation:"Architect",spouseId:4,parents:[1,2],children:[7,8,9],bio:"Award-winning architect who redesigned the city's skyline.",hobby:"Hiking, Jazz",photo:null },
-  { id:4,gen:2,first:"Sarah",last:"Anderson",birth:1967,death:null,gender:"female",role:"wife",location:"New York, NY",occupation:"Pediatrician",spouseId:3,parents:[],children:[7,8,9],bio:"Dedicated pediatrician passionate about community healthcare.",hobby:"Yoga, Cooking",photo:null },
-  { id:5,gen:2,first:"Elizabeth",last:"Carter",birth:1968,death:null,gender:"female",role:"daughter",location:"Chicago, IL",occupation:"Professor",spouseId:6,parents:[1,2],children:[10,11],bio:"History professor at Northwestern University. Published author.",hobby:"Writing, Travel",photo:null },
-  { id:6,gen:2,first:"James",last:"Carter",birth:1966,death:null,gender:"male",role:"husband",location:"Chicago, IL",occupation:"Surgeon",spouseId:5,parents:[],children:[10,11],bio:"Renowned cardiac surgeon. Over 2,000 successful heart surgeries.",hobby:"Golf, Photography",photo:null },
-  // GEN 3
-  { id:7,gen:3,first:"Michael",last:"Anderson",birth:1990,death:null,gender:"male",role:"son",location:"San Francisco, CA",occupation:"Software Engineer",spouseId:null,parents:[3,4],children:[12],bio:"Full-stack developer. Loves open-source and rock climbing.",hobby:"Rock Climbing, Coding",photo:null },
-  { id:8,gen:3,first:"Emma",last:"Anderson",birth:1992,death:null,gender:"female",role:"daughter",location:"Los Angeles, CA",occupation:"Graphic Designer",spouseId:null,parents:[3,4],children:[],bio:"Creative director at a branding agency.",hobby:"Painting, Surfing",photo:null },
-  { id:9,gen:3,first:"Oliver",last:"Anderson",birth:1993,death:null,gender:"male",role:"son",location:"Seattle, WA",occupation:"Marine Biologist",spouseId:null,parents:[3,4],children:[],bio:"Researching coral reef restoration in 40+ countries.",hobby:"Scuba Diving, Photography",photo:null },
-  { id:10,gen:3,first:"Sophia",last:"Carter",birth:1991,death:null,gender:"female",role:"daughter",location:"Chicago, IL",occupation:"Lawyer",spouseId:null,parents:[5,6],children:[13],bio:"Civil rights attorney. Forbes 30 Under 30.",hobby:"Running, Piano",photo:null },
-  { id:11,gen:3,first:"Noah",last:"Carter",birth:1994,death:null,gender:"male",role:"son",location:"Austin, TX",occupation:"Entrepreneur",spouseId:null,parents:[5,6],children:[],bio:"Founded a sustainable tech startup valued at $50M.",hobby:"Skydiving, Guitar",photo:null },
-  // GEN 4
-  { id:12,gen:4,first:"Lily",last:"Anderson",birth:2015,death:null,gender:"female",role:"grandchild",location:"San Francisco, CA",occupation:"Student",spouseId:null,parents:[7],children:[14],bio:"Loves dinosaurs, painting, and her pet goldfish Bubbles.",hobby:"Drawing, Dancing",photo:null },
-  { id:13,gen:4,first:"Ethan",last:"Carter",birth:2017,death:null,gender:"male",role:"grandchild",location:"Chicago, IL",occupation:"Student",spouseId:null,parents:[10],children:[15],bio:"Shows talent for music and loves superheroes.",hobby:"Building Blocks, Music",photo:null },
-  // GEN 5
-  { id:14,gen:5,first:"Zoe",last:"Anderson",birth:2040,death:null,gender:"female",role:"greatgrand",location:"San Francisco, CA",occupation:"Future Student",spouseId:null,parents:[12],children:[16],bio:"The next generation. Full of wonder and curiosity.",hobby:"TBD",photo:null },
-  { id:15,gen:5,first:"Lucas",last:"Carter",birth:2042,death:null,gender:"male",role:"greatgrand",location:"Chicago, IL",occupation:"Future Student",spouseId:null,parents:[13],children:[],bio:"The newest joy of the Carter branch.",hobby:"TBD",photo:null },
-  // GEN 6
-  { id:16,gen:6,first:"Aurora",last:"Anderson",birth:2065,death:null,gender:"female",role:"g6member",location:"Future City",occupation:"Future Student",spouseId:null,parents:[14],children:[],bio:"The shining hope of the 6th generation.",hobby:"TBD",photo:null },
-];
+/* ══════════════════════════════════════════════════════
+   🔥 FIREBASE CONFIG — REPLACE WITH YOUR OWN VALUES!
+══════════════════════════════════════════════════════ */
+const firebaseConfig = {
+  apiKey:            "PASTE_YOUR_apiKey_HERE",
+  authDomain:        "PASTE_YOUR_authDomain_HERE",
+  projectId:         "PASTE_YOUR_projectId_HERE",
+  storageBucket:     "PASTE_YOUR_storageBucket_HERE",
+  messagingSenderId: "PASTE_YOUR_messagingSenderId_HERE",
+  appId:             "PASTE_YOUR_appId_HERE"
+};
 
-let nextId = 200;
-let currentEditId = null;
-let currentDeleteId = null;
-let currentSideLinkedId = null;
-let currentViewId = null;
-let showLines = true;
-let currentScale = 1;
-let addPhotoData = null;
-let editPhotoData = null;
-let sidePhotoData = null;
+firebase.initializeApp(firebaseConfig);
+const db   = firebase.firestore();
+const auth = firebase.auth();
 
-/* ════════════════════════════════════════════════
-   AVATAR HELPERS
-════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════
+   STATE
+══════════════════════════════════════════════════════ */
+let members        = [];
+let currentEditId  = null;
+let currentDeleteId= null;
+let currentViewId  = null;
+let currentSideLinkId = null;
+let showLines      = true;
+let currentScale   = 1;
+let photoData      = { add:null, edit:null, side:null };
+let activityLog    = [];
+let activityExpanded = false;
+let unsubscribeMembers = null;
+
+/* ══════════════════════════════════════════════════════
+   AUTH
+══════════════════════════════════════════════════════ */
+auth.onAuthStateChanged(user => {
+  if(user){
+    document.getElementById('login-screen').classList.add('hidden');
+    document.getElementById('top-bar').style.display = 'flex';
+    document.getElementById('user-email-display').textContent = user.email;
+    initApp();
+  } else {
+    document.getElementById('loading-overlay').classList.add('hidden');
+    document.getElementById('login-screen').classList.remove('hidden');
+    document.getElementById('top-bar').style.display = 'none';
+    if(unsubscribeMembers) unsubscribeMembers();
+  }
+});
+
+function doLogin(){
+  const email = document.getElementById('login-email').value.trim();
+  const pass  = document.getElementById('login-password').value;
+  const errEl = document.getElementById('login-error');
+  const btn   = document.getElementById('login-btn');
+  if(!email||!pass){ showLoginError('Please enter email and password.'); return; }
+  btn.disabled = true;
+  btn.innerHTML = '<div class="login-loading"><div class="spinner"></div> Signing in…</div>';
+  errEl.classList.remove('show');
+  auth.signInWithEmailAndPassword(email, pass)
+    .catch(err => {
+      showLoginError(getFriendlyAuthError(err.code));
+      btn.disabled = false;
+      btn.textContent = '🔑 Sign In';
+    });
+}
+
+function doSignOut(){
+  if(confirm('Sign out from the family tree?')) auth.signOut();
+}
+
+function showLoginError(msg){
+  const el = document.getElementById('login-error');
+  el.textContent = msg; el.classList.add('show');
+}
+
+function getFriendlyAuthError(code){
+  const map = {
+    'auth/user-not-found'   : '❌ No account found with this email.',
+    'auth/wrong-password'   : '❌ Incorrect password. Try again.',
+    'auth/invalid-email'    : '❌ Please enter a valid email address.',
+    'auth/too-many-requests': '⚠️ Too many attempts. Please wait a moment.',
+    'auth/network-request-failed': '🌐 Network error. Check your connection.',
+  };
+  return map[code] || '❌ Login failed. Please check your details.';
+}
+
+/* ══════════════════════════════════════════════════════
+   INIT — REAL-TIME LISTENER
+══════════════════════════════════════════════════════ */
+function initApp(){
+  setSyncBadge('syncing','🔄 Connecting…');
+
+  // Real-time listener — updates ALL users instantly!
+  unsubscribeMembers = db.collection('members')
+    .orderBy('gen','asc')
+    .onSnapshot(snapshot => {
+      members = snapshot.docs.map(doc => ({ ...doc.data(), _docId: doc.id }));
+      document.getElementById('loading-overlay').classList.add('hidden');
+      setSyncBadge('saved','✅ Live');
+      render();
+      setTimeout(()=> setSyncBadge('hidden',''), 3000);
+
+      // Detect changes for activity log
+      snapshot.docChanges().forEach(change => {
+        const d = change.doc.data();
+        const name = `${d.first} ${d.last}`;
+        if(change.type === 'added'   && members.length > 1) logActivity('➕', `${d.editedBy||'Someone'} added ${name}`);
+        if(change.type === 'modified') logActivity('✏️', `${d.editedBy||'Someone'} updated ${name}`);
+        if(change.type === 'removed')  logActivity('🗑️', `${d.editedBy||'Someone'} removed ${name}`);
+      });
+    }, err => {
+      console.error(err);
+      setSyncBadge('offline','⚠️ Connection lost');
+      document.getElementById('loading-overlay').classList.add('hidden');
+      showToast('⚠️ Connection issue. Changes may not save.','error');
+    });
+
+  // If collection is empty, seed default data
+  db.collection('members').get().then(snap => {
+    if(snap.empty) seedDefaultData();
+  });
+}
+
+/* ══════════════════════════════════════════════════════
+   SEED DEFAULT DATA (only runs once on first load)
+══════════════════════════════════════════════════════ */
+async function seedDefaultData(){
+  setSyncBadge('syncing','⬆️ Setting up…');
+  const defaultMembers = [
+    { id:1,gen:1,first:"Robert",  last:"Anderson",birth:1940,death:null,role:"patriarch",location:"Boston, MA",    occupation:"Retired Engineer", spouseId:2,  parents:[],   children:[3,5], bio:"Founding patriarch.",               hobby:"Woodworking, Chess",  photo:null },
+    { id:2,gen:1,first:"Margaret",last:"Anderson",birth:1942,death:null,role:"matriarch",location:"Boston, MA",    occupation:"Retired Teacher",  spouseId:1,  parents:[],   children:[3,5], bio:"Beloved kindergarten teacher.",     hobby:"Gardening, Reading",  photo:null },
+    { id:3,gen:2,first:"William", last:"Anderson",birth:1965,death:null,role:"son",      location:"New York, NY",  occupation:"Architect",        spouseId:4,  parents:[1,2],children:[7,8,9],bio:"Award-winning architect.",          hobby:"Hiking, Jazz",        photo:null },
+    { id:4,gen:2,first:"Sarah",   last:"Anderson",birth:1967,death:null,role:"wife",     location:"New York, NY",  occupation:"Pediatrician",     spouseId:3,  parents:[],   children:[7,8,9],bio:"Dedicated pediatrician.",          hobby:"Yoga, Cooking",       photo:null },
+    { id:5,gen:2,first:"Elizabeth",last:"Carter", birth:1968,death:null,role:"daughter", location:"Chicago, IL",   occupation:"Professor",        spouseId:6,  parents:[1,2],children:[10,11],bio:"History professor.",               hobby:"Writing, Travel",     photo:null },
+    { id:6,gen:2,first:"James",   last:"Carter",  birth:1966,death:null,role:"husband",  location:"Chicago, IL",   occupation:"Surgeon",          spouseId:5,  parents:[],   children:[10,11],bio:"Renowned cardiac surgeon.",        hobby:"Golf, Photography",   photo:null },
+    { id:7,gen:3,first:"Michael", last:"Anderson",birth:1990,death:null,role:"son",      location:"San Francisco",  occupation:"Software Engineer",spouseId:null,parents:[3,4],children:[12],  bio:"Full-stack developer.",            hobby:"Rock Climbing, Coding",photo:null },
+    { id:8,gen:3,first:"Emma",    last:"Anderson",birth:1992,death:null,role:"daughter", location:"Los Angeles",    occupation:"Graphic Designer", spouseId:null,parents:[3,4],children:[],    bio:"Creative director.",               hobby:"Painting, Surfing",   photo:null },
+    { id:9,gen:3,first:"Oliver",  last:"Anderson",birth:1993,death:null,role:"son",      location:"Seattle, WA",    occupation:"Marine Biologist", spouseId:null,parents:[3,4],children:[],    bio:"Coral reef researcher.",           hobby:"Scuba Diving",        photo:null },
+    { id:10,gen:3,first:"Sophia", last:"Carter",  birth:1991,death:null,role:"daughter", location:"Chicago, IL",    occupation:"Lawyer",           spouseId:null,parents:[5,6],children:[13],  bio:"Civil rights attorney.",           hobby:"Running, Piano",      photo:null },
+    { id:11,gen:3,first:"Noah",   last:"Carter",  birth:1994,death:null,role:"son",      location:"Austin, TX",     occupation:"Entrepreneur",     spouseId:null,parents:[5,6],children:[],    bio:"Sustainable tech startup founder.",hobby:"Skydiving, Guitar",   photo:null },
+    { id:12,gen:4,first:"Lily",   last:"Anderson",birth:2015,death:null,role:"grandchild",location:"San Francisco",  occupation:"Student",          spouseId:null,parents:[7],  children:[14],  bio:"Loves dinosaurs and painting.",    hobby:"Drawing, Dancing",    photo:null },
+    { id:13,gen:4,first:"Ethan",  last:"Carter",  birth:2017,death:null,role:"grandchild",location:"Chicago, IL",    occupation:"Student",          spouseId:null,parents:[10], children:[15],  bio:"Talent for music.",                hobby:"Building Blocks",     photo:null },
+    { id:14,gen:5,first:"Zoe",    last:"Anderson",birth:2040,death:null,role:"greatgrand",location:"San Francisco",  occupation:"Future Student",   spouseId:null,parents:[12], children:[16],  bio:"Full of wonder.",                  hobby:"TBD",                 photo:null },
+    { id:15,gen:5,first:"Lucas",  last:"Carter",  birth:2042,death:null,role:"greatgrand",location:"Chicago, IL",    occupation:"Future Student",   spouseId:null,parents:[13], children:[],    bio:"Newest joy.",                      hobby:"TBD",                 photo:null },
+    { id:16,gen:6,first:"Aurora", last:"Anderson",birth:2065,death:null,role:"g6member",  location:"Future City",    occupation:"Future Student",   spouseId:null,parents:[14], children:[],    bio:"6th generation hope.",             hobby:"TBD",                 photo:null },
+  ];
+  const batch = db.batch();
+  defaultMembers.forEach(m => {
+    const ref = db.collection('members').doc(String(m.id));
+    batch.set(ref, { ...m, editedBy:'System', editedAt: firebase.firestore.FieldValue.serverTimestamp() });
+  });
+  await batch.commit();
+}
+
+/* ══════════════════════════════════════════════════════
+   RENDER
+══════════════════════════════════════════════════════ */
+const genNames = {
+  1:'🌿 Generation I — Founders',      2:'🌳 Generation II — Parents',
+  3:'🍃 Generation III — Children',    4:'🌱 Generation IV — Grandchildren',
+  5:'✨ Generation V — Great-Grandchildren', 6:'🌟 Generation VI — Next Generation'
+};
 const avatarPalette = [
   ["#f0c040","#8a6000"],["#ff7eb3","#c03060"],["#50b4ff","#1060a0"],
   ["#c084fc","#7030c0"],["#4ade80","#1a8040"],["#fbbf24","#b06000"],
   ["#fde047","#a09000"],["#fb923c","#b04010"],["#38bdf8","#086090"],
   ["#a78bfa","#5020b0"],["#f472b6","#b02070"],["#34d399","#0a6040"]
 ];
-function avatarColor(id){ return avatarPalette[id % avatarPalette.length]; }
-function initials(f,l){ return (f[0]+(l?l[0]:'')).toUpperCase(); }
+function avatarColor(id){ return avatarPalette[Math.abs(id) % avatarPalette.length]; }
+function initials(f,l){ return ((f||'?')[0]+((l||'?')[0])).toUpperCase(); }
 
-/* ════════════════════════════════════════════════
-   RENDER
-════════════════════════════════════════════════ */
 function render(){
   const inner = document.getElementById('tree-inner');
   inner.innerHTML = '';
-
-  const genNames = {
-    1:'🌿 Generation I — Founders',
-    2:'🌳 Generation II — Parents',
-    3:'🍃 Generation III — Children',
-    4:'🌱 Generation IV — Grandchildren',
-    5:'✨ Generation V — Great-Grandchildren',
-    6:'🌟 Generation VI — Next Generation'
-  };
-
+  if(!members.length){
+    inner.innerHTML = `<div class="empty-state"><div class="icon">🌱</div><h3>No family members yet</h3><p>Click "Add Member" to start building your family tree!</p></div>`;
+    return;
+  }
   for(let g=1; g<=6; g++){
     const rows = members.filter(m=>m.gen===g);
     if(!rows.length) continue;
-
     const section = document.createElement('div');
     section.className = 'gen-section';
-
     const lbl = document.createElement('div');
     lbl.className = 'gen-label';
     lbl.textContent = genNames[g];
     section.appendChild(lbl);
-
     const row = document.createElement('div');
     row.className = 'gen-row';
-    row.dataset.gen = g;
-
-    rows.forEach((m,i) => {
-      const wrapper = buildWrapper(m, i);
-      row.appendChild(wrapper);
-    });
-
+    rows.forEach((m,i)=> row.appendChild(buildWrapper(m,i)));
     section.appendChild(row);
-
-    const spacer = document.createElement('div');
-    spacer.className = 'gen-spacer';
-    section.appendChild(spacer);
-
+    const sp = document.createElement('div');
+    sp.className = 'gen-spacer';
+    section.appendChild(sp);
     inner.appendChild(section);
   }
-
   updateStats();
   setTimeout(drawLines, 150);
 }
 
 function buildWrapper(m, idx){
-  const wrapper = document.createElement('div');
-  wrapper.className = 'member-wrapper';
-  wrapper.id = `wrapper-${m.id}`;
-
-  // Left add button
-  const leftBtn = document.createElement('button');
-  leftBtn.className = 'side-add-btn left';
-  leftBtn.title = 'Add partner/spouse to the left';
-  leftBtn.innerHTML = '👈 +';
-  leftBtn.onclick = (e)=>{ e.stopPropagation(); openSideModal(m.id,'left'); };
-
-  // Card
+  const wr = document.createElement('div');
+  wr.className = 'member-wrapper';
+  wr.id = `wrapper-${m.id}`;
+  const lb = document.createElement('button');
+  lb.className = 'side-add-btn left';
+  lb.title = 'Add partner to the left';
+  lb.innerHTML = '👈+';
+  lb.onclick = e=>{ e.stopPropagation(); openSideModal(m.id); };
   const card = buildCard(m, idx);
-
-  // Right add button
-  const rightBtn = document.createElement('button');
-  rightBtn.className = 'side-add-btn right';
-  rightBtn.title = 'Add partner/spouse to the right';
-  rightBtn.innerHTML = '+ 👉';
-  rightBtn.onclick = (e)=>{ e.stopPropagation(); openSideModal(m.id,'right'); };
-
-  wrapper.appendChild(leftBtn);
-  wrapper.appendChild(card);
-  wrapper.appendChild(rightBtn);
-  return wrapper;
+  const rb = document.createElement('button');
+  rb.className = 'side-add-btn right';
+  rb.title = 'Add partner to the right';
+  rb.innerHTML = '+👉';
+  rb.onclick = e=>{ e.stopPropagation(); openSideModal(m.id); };
+  wr.appendChild(lb); wr.appendChild(card); wr.appendChild(rb);
+  return wr;
 }
 
 function buildCard(m, idx){
-  const [bg] = avatarColor(m.id);
+  const [bg] = avatarColor(m.id || idx);
   const card = document.createElement('div');
   card.className = 'member-card';
   card.id = `card-${m.id}`;
-  card.style.animationDelay = (idx*80)+'ms';
-
-  const avatarHTML = m.photo
+  card.style.animationDelay = (idx*60)+'ms';
+  const avHTML = m.photo
     ? `<img src="${m.photo}" alt="${m.first}"/>`
     : initials(m.first, m.last);
-
   card.innerHTML = `
+    ${m.editedBy && m.editedBy !== 'System' ? '<div class="edited-badge" title="Recently edited"></div>' : ''}
     <div class="avatar" style="background:linear-gradient(135deg,${bg},#000a);box-shadow:0 0 18px ${bg}55;">
-      <div class="avatar-ring"></div>${avatarHTML}
+      <div class="avatar-ring"></div>${avHTML}
     </div>
     <div class="member-name">${m.first}<br/>${m.last}</div>
-    <div class="member-year">${m.birth}${m.death?' – '+m.death:''}</div>
+    <div class="member-year">${m.birth||'?'}${m.death?' – '+m.death:''}</div>
     <span class="member-role role-${m.role}">${m.role}</span>
     <div class="card-actions">
-      <button class="card-btn view-btn"   onclick="event.stopPropagation();openViewModal(${m.id})">👁 View</button>
-      <button class="card-btn edit-btn"   onclick="event.stopPropagation();openEditModal(${m.id})">✏️ Edit</button>
+      <button class="card-btn view-btn"   onclick="event.stopPropagation();openViewModal(${m.id})">👁</button>
+      <button class="card-btn edit-btn"   onclick="event.stopPropagation();openEditModal(${m.id})">✏️</button>
       <button class="card-btn delete-btn" onclick="event.stopPropagation();openDeleteModal(${m.id})">🗑️</button>
-    </div>
-  `;
+    </div>`;
   card.addEventListener('click', ()=> openViewModal(m.id));
   return card;
 }
 
-/* ════════════════════════════════════════════════
-   STATS
-════════════════════════════════════════════════ */
 function updateStats(){
   document.getElementById('stat-members').textContent = members.length;
-  const marriages = members.filter(m=>m.spouseId !== null).length / 2;
-  document.getElementById('stat-marriages').textContent = Math.ceil(marriages);
-  const activeGens = [...new Set(members.map(m=>m.gen))].length;
-  document.getElementById('stat-gens').textContent = activeGens;
+  document.getElementById('stat-marriages').textContent = Math.floor(members.filter(m=>m.spouseId).length/2);
+  document.getElementById('stat-gens').textContent = [...new Set(members.map(m=>m.gen))].length;
 }
 
-/* ════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════
    SVG LINES
-════════════════════════════════════════════════ */
+══════════════════════════════════════════════════════ */
 function drawLines(){
   const svg = document.getElementById('tree-svg');
-  const container = document.getElementById('tree-container');
-  svg.setAttribute('viewBox',`0 0 ${container.scrollWidth} ${container.scrollHeight}`);
-  svg.style.width = container.scrollWidth+'px';
-  svg.style.height = container.scrollHeight+'px';
-  svg.innerHTML = '';
+  const cont = document.getElementById('tree-container');
+  const w = cont.scrollWidth, h = cont.scrollHeight;
+  svg.setAttribute('viewBox',`0 0 ${w} ${h}`);
+  svg.style.width=w+'px'; svg.style.height=h+'px';
+  svg.innerHTML='';
   if(!showLines) return;
-
-  const cRect = container.getBoundingClientRect();
-
-  // Glow filter
-  const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
-  defs.innerHTML = `<filter id="glow"><feGaussianBlur in="SourceGraphic" stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
+  const cR = cont.getBoundingClientRect();
+  const defs = mkSVG('defs',{});
+  defs.innerHTML='<filter id="glow"><feGaussianBlur in="SourceGraphic" stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>';
   svg.appendChild(defs);
-
-  // Parent → Child
-  members.forEach(child => {
-    (child.parents||[]).forEach(pid => {
-      const pe = document.getElementById(`card-${pid}`);
-      const ce = document.getElementById(`card-${child.id}`);
+  members.forEach(child=>{
+    (child.parents||[]).forEach(pid=>{
+      const pe=document.getElementById(`card-${pid}`);
+      const ce=document.getElementById(`card-${child.id}`);
       if(!pe||!ce) return;
-      const pr = pe.getBoundingClientRect(), cr = ce.getBoundingClientRect();
-      const sx = container.scrollLeft, sy = container.scrollTop;
-      const x1 = pr.left-cRect.left+sx+pr.width/2, y1 = pr.top-cRect.top+sy+pr.height;
-      const x2 = cr.left-cRect.left+sx+cr.width/2, y2 = cr.top-cRect.top+sy;
-      const my = (y1+y2)/2;
-      const path = makeSVGEl('path',{
-        d:`M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}`,
-        stroke:'rgba(240,192,64,0.5)', 'stroke-width':'2', fill:'none', 'stroke-dasharray':'6,3'
-      });
-      svg.appendChild(path);
-      [{ x:x1,y:y1},{x:x2,y:y2}].forEach(p=>{
-        svg.appendChild(makeSVGEl('circle',{cx:p.x,cy:p.y,r:4,fill:'#f0c040',filter:'url(#glow)'}));
-      });
+      const pr=pe.getBoundingClientRect(), cr=ce.getBoundingClientRect();
+      const sx=cont.scrollLeft, sy=cont.scrollTop;
+      const x1=pr.left-cR.left+sx+pr.width/2, y1=pr.top-cR.top+sy+pr.height;
+      const x2=cr.left-cR.left+sx+cr.width/2, y2=cr.top-cR.top+sy;
+      const my=(y1+y2)/2;
+      svg.appendChild(mkSVG('path',{d:`M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}`,stroke:'rgba(240,192,64,0.5)','stroke-width':'2',fill:'none','stroke-dasharray':'6,3'}));
+      [{x:x1,y:y1},{x:x2,y:y2}].forEach(p=> svg.appendChild(mkSVG('circle',{cx:p.x,cy:p.y,r:4,fill:'#f0c040',filter:'url(#glow)'})));
     });
   });
-
-  // Spouse lines
-  const drawn = new Set();
-  members.forEach(m => {
+  const drawn=new Set();
+  members.forEach(m=>{
     if(!m.spouseId) return;
-    const key = [m.id,m.spouseId].sort().join('-');
+    const key=[m.id,m.spouseId].sort().join('-');
     if(drawn.has(key)) return;
     drawn.add(key);
-    const e1=document.getElementById(`card-${m.id}`), e2=document.getElementById(`card-${m.spouseId}`);
+    const e1=document.getElementById(`card-${m.id}`),e2=document.getElementById(`card-${m.spouseId}`);
     if(!e1||!e2) return;
-    const r1=e1.getBoundingClientRect(), r2=e2.getBoundingClientRect();
-    const sx=container.scrollLeft, sy=container.scrollTop;
-    const x1=r1.left-cRect.left+sx+r1.width, y1=r1.top-cRect.top+sy+r1.height/2;
-    const x2=r2.left-cRect.left+sx, y2=r2.top-cRect.top+sy+r2.height/2;
-    svg.appendChild(makeSVGEl('line',{x1,y1,x2,y2,stroke:'rgba(255,130,180,0.6)','stroke-width':'2','stroke-dasharray':'4,3'}));
-    const mx=(x1+x2)/2, my=(y1+y2)/2;
-    const heart=document.createElementNS('http://www.w3.org/2000/svg','text');
-    heart.setAttribute('x',mx); heart.setAttribute('y',my+6);
-    heart.setAttribute('text-anchor','middle'); heart.setAttribute('font-size','14');
-    heart.setAttribute('fill','rgba(255,130,180,0.9)'); heart.textContent='♥';
-    svg.appendChild(heart);
+    const r1=e1.getBoundingClientRect(),r2=e2.getBoundingClientRect();
+    const sx=cont.scrollLeft,sy=cont.scrollTop;
+    const x1=r1.left-cR.left+sx+r1.width, y1=r1.top-cR.top+sy+r1.height/2;
+    const x2=r2.left-cR.left+sx,          y2=r2.top-cR.top+sy+r2.height/2;
+    svg.appendChild(mkSVG('line',{x1,y1,x2,y2,stroke:'rgba(255,130,180,0.6)','stroke-width':'2','stroke-dasharray':'4,3'}));
+    const hrt=document.createElementNS('http://www.w3.org/2000/svg','text');
+    hrt.setAttribute('x',(x1+x2)/2); hrt.setAttribute('y',(y1+y2)/2+6);
+    hrt.setAttribute('text-anchor','middle'); hrt.setAttribute('font-size','14');
+    hrt.setAttribute('fill','rgba(255,130,180,0.9)'); hrt.textContent='♥';
+    svg.appendChild(hrt);
   });
 }
 
-function makeSVGEl(tag, attrs){
-  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
-  Object.entries(attrs).forEach(([k,v])=> el.setAttribute(k,v));
+function mkSVG(tag,attrs){
+  const el=document.createElementNS('http://www.w3.org/2000/svg',tag);
+  Object.entries(attrs).forEach(([k,v])=>el.setAttribute(k,v));
   return el;
 }
 
-/* ════════════════════════════════════════════════
-   OVERLAY HELPERS
-════════════════════════════════════════════════ */
-function openOverlay(id){ document.getElementById(id).classList.add('open'); }
-function closeOverlay(id){ document.getElementById(id).classList.remove('open'); }
-function overlayClick(e, id){ if(e.target === document.getElementById(id)) closeOverlay(id); }
+/* ══════════════════════════════════════════════════════
+   FIRESTORE HELPERS
+══════════════════════════════════════════════════════ */
+function getDocRef(id){ return db.collection('members').doc(String(id)); }
 
-/* ════════════════════════════════════════════════
+async function saveToFirestore(id, data){
+  setSyncBadge('syncing','⬆️ Saving…');
+  try {
+    const user = auth.currentUser;
+    await getDocRef(id).set({
+      ...data,
+      editedBy: user ? user.email : 'Unknown',
+      editedAt: firebase.firestore.FieldValue.serverTimestamp()
+    });
+    setSyncBadge('saved','✅ Saved!');
+    setTimeout(()=>setSyncBadge('hidden',''), 2500);
+  } catch(e){
+    setSyncBadge('offline','❌ Save failed');
+    showToast('❌ Failed to save. Check your connection.','error');
+  }
+}
+
+async function deleteFromFirestore(id){
+  setSyncBadge('syncing','🗑️ Removing…');
+  try {
+    await getDocRef(id).delete();
+    setSyncBadge('saved','✅ Removed');
+    setTimeout(()=>setSyncBadge('hidden',''), 2500);
+  } catch(e){
+    setSyncBadge('offline','❌ Delete failed');
+    showToast('❌ Failed to delete. Check your connection.','error');
+  }
+}
+
+/* ══════════════════════════════════════════════════════
    VIEW MODAL
-════════════════════════════════════════════════ */
+══════════════════════════════════════════════════════ */
 function openViewModal(id){
-  const m = members.find(x=>x.id===id);
+  const m = members.find(x=>x.id==id);
   if(!m) return;
   currentViewId = id;
-
-  const [bg] = avatarColor(m.id);
-  const avEl = document.getElementById('vm-avatar');
-  avEl.style.background = `linear-gradient(135deg,${bg},#000a)`;
-  avEl.innerHTML = m.photo ? `<img src="${m.photo}" alt="${m.first}"/>` : initials(m.first, m.last);
-
-  document.getElementById('vm-name').textContent = m.first+' '+m.last;
-  document.getElementById('vm-role').innerHTML = `<span class="member-role role-${m.role}">${m.role}</span>`;
-
-  const childNames = (m.children||[]).map(cid=>{ const c=members.find(x=>x.id===cid); return c?c.first+' '+c.last:''; }).filter(Boolean);
-  const parentNames = (m.parents||[]).map(pid=>{ const p=members.find(x=>x.id===pid); return p?p.first+' '+p.last:''; }).filter(Boolean);
-  const spouse = m.spouseId ? members.find(x=>x.id===m.spouseId) : null;
-
-  const items = [
-    {k:'Born', v:`${m.birth}${!m.death?' (Age '+(new Date().getFullYear()-m.birth)+')':''}`},
+  const [bg]=avatarColor(m.id);
+  const av=document.getElementById('vm-avatar');
+  av.style.background=`linear-gradient(135deg,${bg},#000a)`;
+  av.innerHTML = m.photo?`<img src="${m.photo}" alt="${m.first}"/>`:initials(m.first,m.last);
+  document.getElementById('vm-name').textContent=`${m.first} ${m.last}`;
+  document.getElementById('vm-role').innerHTML=`<span class="member-role role-${m.role}">${m.role}</span>`;
+  const childNames=(m.children||[]).map(cid=>{const c=members.find(x=>x.id==cid);return c?c.first+' '+c.last:'';}).filter(Boolean);
+  const parentNames=(m.parents||[]).map(pid=>{const p=members.find(x=>x.id==pid);return p?p.first+' '+p.last:'';}).filter(Boolean);
+  const sp=m.spouseId?members.find(x=>x.id==m.spouseId):null;
+  const yr=new Date().getFullYear();
+  const items=[
+    {k:'Born', v:`${m.birth||'?'}${!m.death&&m.birth?' (Age '+(yr-m.birth)+')':''}`},
     {k:'Location', v:m.location||'—'},
     {k:'Occupation', v:m.occupation||'—'},
     {k:'Hobbies', v:m.hobby||'—'},
-    ...(spouse?[{k:'Spouse', v:spouse.first+' '+spouse.last}]:[]),
+    ...(sp?[{k:'Spouse', v:`${sp.first} ${sp.last}`}]:[]),
     ...(parentNames.length?[{k:'Parents', v:parentNames.join(' & ')}]:[]),
-    ...(m.death?[{k:'Passed', v:String(m.death)}]:[]),
-    ...(childNames.length?[{k:'Children', tags:childNames, full:false}]:[]),
+    ...(m.death?[{k:'Passed Away', v:String(m.death)}]:[]),
+    ...(childNames.length?[{k:'Children', tags:childNames}]:[]),
+    {k:'Last Edited By', v:m.editedBy||'—'},
     {k:'About', v:m.bio||'—', full:true}
   ];
-
-  document.getElementById('vm-info').innerHTML = items.map(item=>`
+  document.getElementById('vm-info').innerHTML=items.map(item=>`
     <div class="info-item ${item.full?'full':''}">
       <div class="info-key">${item.k}</div>
       ${item.tags
-        ? `<div style="margin-top:4px">${item.tags.map(t=>`<span class="rel-tag">${t}</span>`).join('')}</div>`
-        : `<div class="info-value">${item.v}</div>`}
+        ?`<div style="margin-top:4px">${item.tags.map(t=>`<span class="rel-tag">${t}</span>`).join('')}</div>`
+        :`<div class="info-value">${item.v}</div>`}
     </div>`).join('');
-
   openOverlay('view-overlay');
 }
+function openEditFromView(){   closeOverlay('view-overlay'); openEditModal(currentViewId); }
+function openDeleteFromView(){ closeOverlay('view-overlay'); openDeleteModal(currentViewId); }
 
-function openEditFromView(){
-  closeOverlay('view-overlay');
-  openEditModal(currentViewId);
-}
-function openDeleteFromView(){
-  closeOverlay('view-overlay');
-  openDeleteModal(currentViewId);
-}
-
-/* ════════════════════════════════════════════════
-   ADD MODAL
-════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════
+   ADD MEMBER
+══════════════════════════════════════════════════════ */
 function openAddModal(){
-  resetPhotoUpload('add-photo-preview','add-photo-area');
-  addPhotoData = null;
-  ['a-first','a-last','a-birth','a-death','a-loc','a-occ','a-hobby','a-bio'].forEach(id=>{ document.getElementById(id).value=''; });
-  document.getElementById('a-gen').value = '3';
-  document.getElementById('a-role').value = 'son';
+  photoData.add=null;
+  resetPhoto('add-photo-preview','add-photo-area');
+  ['a-first','a-last','a-birth','a-death','a-loc','a-occ','a-hobby','a-bio'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('a-gen').value='3';
+  document.getElementById('a-role').value='son';
   openOverlay('add-overlay');
 }
 
-function addMember(){
-  const first = document.getElementById('a-first').value.trim();
-  const last  = document.getElementById('a-last').value.trim();
-  if(!first||!last){ showToast('⚠️ First and last name are required!','error'); return; }
-
+async function addMember(){
+  const first=document.getElementById('a-first').value.trim();
+  const last =document.getElementById('a-last').value.trim();
+  if(!first||!last){ showToast('⚠️ First & last name required!','error'); return; }
+  const newId = Date.now();
   const newM = {
-    id: nextId++,
-    gen: parseInt(document.getElementById('a-gen').value),
+    id:newId, gen:parseInt(document.getElementById('a-gen').value),
     first, last,
-    birth: parseInt(document.getElementById('a-birth').value)||2000,
-    death: parseInt(document.getElementById('a-death').value)||null,
-    gender: 'unknown',
-    role: document.getElementById('a-role').value,
-    location: document.getElementById('a-loc').value||'Unknown',
-    occupation: document.getElementById('a-occ').value||'Unknown',
-    hobby: document.getElementById('a-hobby').value||'N/A',
-    bio: document.getElementById('a-bio').value||'A new member of the Anderson family.',
-    spouseId: null, parents:[], children:[],
-    photo: addPhotoData
+    birth:parseInt(document.getElementById('a-birth').value)||new Date().getFullYear(),
+    death:parseInt(document.getElementById('a-death').value)||null,
+    role:document.getElementById('a-role').value,
+    location:document.getElementById('a-loc').value||'Unknown',
+    occupation:document.getElementById('a-occ').value||'Unknown',
+    hobby:document.getElementById('a-hobby').value||'N/A',
+    bio:document.getElementById('a-bio').value||'A new member of the family.',
+    spouseId:null, parents:[], children:[],
+    photo:photoData.add||null
   };
-
-  members.push(newM);
+  await saveToFirestore(newId, newM);
   closeOverlay('add-overlay');
-  render();
-  showToast(`🌱 ${first} ${last} added to the family!`);
+  showToast(`🌱 ${first} ${last} added!`);
 }
 
-/* ════════════════════════════════════════════════
-   EDIT MODAL
-════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════
+   EDIT MEMBER
+══════════════════════════════════════════════════════ */
 function openEditModal(id){
-  const m = members.find(x=>x.id===id);
+  const m=members.find(x=>x.id==id);
   if(!m) return;
-  currentEditId = id;
-  editPhotoData = m.photo;
-
-  document.getElementById('e-id').value = id;
-  document.getElementById('e-first').value = m.first;
-  document.getElementById('e-last').value = m.last;
-  document.getElementById('e-birth').value = m.birth||'';
-  document.getElementById('e-death').value = m.death||'';
-  document.getElementById('e-gen').value = m.gen;
-  document.getElementById('e-role').value = m.role;
-  document.getElementById('e-loc').value = m.location||'';
-  document.getElementById('e-occ').value = m.occupation||'';
-  document.getElementById('e-hobby').value = m.hobby||'';
-  document.getElementById('e-bio').value = m.bio||'';
-
-  const prev = document.getElementById('edit-photo-preview');
-  const area = document.getElementById('edit-photo-area');
-  if(m.photo){
-    prev.innerHTML = `<img src="${m.photo}" alt="photo"/>`;
-    area.classList.add('has-image');
-  } else {
-    resetPhotoUpload('edit-photo-preview','edit-photo-area');
-  }
+  currentEditId=id;
+  photoData.edit=m.photo||null;
+  document.getElementById('e-id').value=id;
+  document.getElementById('e-first').value=m.first||'';
+  document.getElementById('e-last').value=m.last||'';
+  document.getElementById('e-birth').value=m.birth||'';
+  document.getElementById('e-death').value=m.death||'';
+  document.getElementById('e-gen').value=m.gen||3;
+  document.getElementById('e-role').value=m.role||'son';
+  document.getElementById('e-loc').value=m.location||'';
+  document.getElementById('e-occ').value=m.occupation||'';
+  document.getElementById('e-hobby').value=m.hobby||'';
+  document.getElementById('e-bio').value=m.bio||'';
+  const prev=document.getElementById('edit-photo-preview');
+  const area=document.getElementById('edit-photo-area');
+  if(m.photo){ prev.innerHTML=`<img src="${m.photo}" alt="photo"/>`; area.classList.add('has-image'); }
+  else resetPhoto('edit-photo-preview','edit-photo-area');
   openOverlay('edit-overlay');
 }
 
-function saveEdit(){
-  const first = document.getElementById('e-first').value.trim();
-  const last  = document.getElementById('e-last').value.trim();
-  if(!first||!last){ showToast('⚠️ First and last name are required!','error'); return; }
-
-  const m = members.find(x=>x.id===currentEditId);
+async function saveEdit(){
+  const first=document.getElementById('e-first').value.trim();
+  const last =document.getElementById('e-last').value.trim();
+  if(!first||!last){ showToast('⚠️ First & last name required!','error'); return; }
+  const m=members.find(x=>x.id==currentEditId);
   if(!m) return;
-
-  m.first = first;
-  m.last  = last;
-  m.birth = parseInt(document.getElementById('e-birth').value)||m.birth;
-  m.death = parseInt(document.getElementById('e-death').value)||null;
-  m.gen   = parseInt(document.getElementById('e-gen').value);
-  m.role  = document.getElementById('e-role').value;
-  m.location   = document.getElementById('e-loc').value||m.location;
-  m.occupation = document.getElementById('e-occ').value||m.occupation;
-  m.hobby      = document.getElementById('e-hobby').value||m.hobby;
-  m.bio        = document.getElementById('e-bio').value||m.bio;
-  if(editPhotoData !== m.photo) m.photo = editPhotoData;
-
+  const updated={
+    ...m, first, last,
+    birth:parseInt(document.getElementById('e-birth').value)||m.birth,
+    death:parseInt(document.getElementById('e-death').value)||null,
+    gen:parseInt(document.getElementById('e-gen').value),
+    role:document.getElementById('e-role').value,
+    location:document.getElementById('e-loc').value||m.location,
+    occupation:document.getElementById('e-occ').value||m.occupation,
+    hobby:document.getElementById('e-hobby').value||m.hobby,
+    bio:document.getElementById('e-bio').value||m.bio,
+    photo:photoData.edit||m.photo||null
+  };
+  await saveToFirestore(currentEditId, updated);
   closeOverlay('edit-overlay');
-  render();
-  showToast(`✅ ${first} ${last} updated successfully!`);
+  showToast(`✅ ${first} ${last} updated!`);
 }
 
-/* ════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════
    DELETE
-════════════════════════════════════════════════ */
+══════════════════════════════════════════════════════ */
 function openDeleteModal(id){
-  const m = members.find(x=>x.id===id);
+  const m=members.find(x=>x.id==id);
   if(!m) return;
-  currentDeleteId = id;
-  document.getElementById('del-name').textContent = m.first+' '+m.last;
+  currentDeleteId=id;
+  document.getElementById('del-name').textContent=`${m.first} ${m.last}`;
   openOverlay('delete-overlay');
 }
 
-function confirmDelete(){
+async function confirmDelete(){
   if(!currentDeleteId) return;
-  const m = members.find(x=>x.id===currentDeleteId);
+  const m=members.find(x=>x.id==currentDeleteId);
   if(!m) return;
-  const name = m.first+' '+m.last;
+  const name=`${m.first} ${m.last}`;
 
-  // Remove from spouse reference
+  // Clean up references
+  const batch=db.batch();
   if(m.spouseId){
-    const sp = members.find(x=>x.id===m.spouseId);
-    if(sp) sp.spouseId = null;
+    const sp=members.find(x=>x.id==m.spouseId);
+    if(sp) batch.update(getDocRef(m.spouseId),{ spouseId:null });
   }
-  // Remove from children's parent list
   (m.children||[]).forEach(cid=>{
-    const c = members.find(x=>x.id===cid);
-    if(c) c.parents = c.parents.filter(pid=>pid!==currentDeleteId);
+    const c=members.find(x=>x.id==cid);
+    if(c) batch.update(getDocRef(cid),{ parents:(c.parents||[]).filter(p=>p!=currentDeleteId) });
   });
-  // Remove from parents' children list
   (m.parents||[]).forEach(pid=>{
-    const p = members.find(x=>x.id===pid);
-    if(p) p.children = p.children.filter(cid=>cid!==currentDeleteId);
+    const p=members.find(x=>x.id==pid);
+    if(p) batch.update(getDocRef(pid),{ children:(p.children||[]).filter(c=>c!=currentDeleteId) });
   });
+  await batch.commit();
+  await deleteFromFirestore(currentDeleteId);
 
-  members = members.filter(x=>x.id!==currentDeleteId);
   closeOverlay('delete-overlay');
-  render();
   showToast(`🗑️ ${name} removed from the family tree.`);
-  currentDeleteId = null;
+  currentDeleteId=null;
 }
 
-/* ════════════════════════════════════════════════
-   SIDE ADD MODAL (Spouse)
-════════════════════════════════════════════════ */
-function openSideModal(linkedId, side){
-  const m = members.find(x=>x.id===linkedId);
+/* ══════════════════════════════════════════════════════
+   SIDE ADD (SPOUSE)
+══════════════════════════════════════════════════════ */
+function openSideModal(linkedId){
+  const m=members.find(x=>x.id==linkedId);
   if(!m) return;
-  currentSideLinkedId = linkedId;
-
-  document.getElementById('s-linked-id').value = linkedId;
-  document.getElementById('side-target-name').textContent = m.first+' '+m.last;
-  document.getElementById('side-position-label').textContent = side === 'left' ? 'to the left of' : 'to the right of';
-
-  resetPhotoUpload('side-photo-preview','side-photo-area');
-  sidePhotoData = null;
-  ['s-first','s-last','s-birth','s-death','s-loc','s-occ','s-hobby','s-bio'].forEach(id=>{
-    document.getElementById(id).value='';
-  });
-  document.getElementById('s-role').value = 'wife';
+  currentSideLinkId=linkedId;
+  document.getElementById('s-linked-id').value=linkedId;
+  document.getElementById('side-target-name').textContent=`${m.first} ${m.last}`;
+  photoData.side=null;
+  resetPhoto('side-photo-preview','side-photo-area');
+  ['s-first','s-last','s-birth','s-loc','s-occ','s-bio'].forEach(id=>document.getElementById(id).value='');
+  document.getElementById('s-role').value='wife';
   openOverlay('side-overlay');
 }
 
-function addSideMember(){
-  const first = document.getElementById('s-first').value.trim();
-  const last  = document.getElementById('s-last').value.trim();
-  if(!first||!last){ showToast('⚠️ First and last name are required!','error'); return; }
-
-  const linked = members.find(x=>x.id===currentSideLinkedId);
+async function addSideMember(){
+  const first=document.getElementById('s-first').value.trim();
+  const last =document.getElementById('s-last').value.trim();
+  if(!first||!last){ showToast('⚠️ First & last name required!','error'); return; }
+  const linked=members.find(x=>x.id==currentSideLinkId);
   if(!linked) return;
-
-  const newM = {
-    id: nextId++,
-    gen: linked.gen,
+  const newId=Date.now();
+  const newM={
+    id:newId, gen:linked.gen,
     first, last,
-    birth: parseInt(document.getElementById('s-birth').value)||2000,
-    death: parseInt(document.getElementById('s-death').value)||null,
-    gender: 'unknown',
-    role: document.getElementById('s-role').value,
-    location: document.getElementById('s-loc').value||'Unknown',
-    occupation: document.getElementById('s-occ').value||'Unknown',
-    hobby: document.getElementById('s-hobby').value||'N/A',
-    bio: document.getElementById('s-bio').value||'Partner of '+linked.first+' '+linked.last+'.',
-    spouseId: currentSideLinkedId,
-    parents:[], children:[],
-    photo: sidePhotoData
+    birth:parseInt(document.getElementById('s-birth').value)||2000,
+    death:null,
+    role:document.getElementById('s-role').value,
+    location:document.getElementById('s-loc').value||linked.location||'Unknown',
+    occupation:document.getElementById('s-occ').value||'Unknown',
+    hobby:'N/A',
+    bio:document.getElementById('s-bio').value||`Partner of ${linked.first} ${linked.last}.`,
+    spouseId:currentSideLinkId, parents:[], children:[],
+    photo:photoData.side||null
   };
-
-  // Link both ways
-  linked.spouseId = newM.id;
-  members.push(newM);
-
+  const batch=db.batch();
+  batch.set(getDocRef(newId),{ ...newM, editedBy:auth.currentUser?.email||'Unknown', editedAt:firebase.firestore.FieldValue.serverTimestamp() });
+  batch.update(getDocRef(currentSideLinkId),{ spouseId:newId });
+  await batch.commit();
   closeOverlay('side-overlay');
-  render();
   showToast(`💑 ${first} ${last} added as partner of ${linked.first}!`);
 }
 
-/* ════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════
    PHOTO UPLOAD
-════════════════════════════════════════════════ */
-function triggerUpload(inputId){
-  document.getElementById(inputId).click();
-}
-
-function handlePhotoUpload(event, previewId, areaId){
-  const file = event.target.files[0];
+══════════════════════════════════════════════════════ */
+function triggerUpload(id){ document.getElementById(id).click(); }
+function handlePhoto(event, previewId, areaId, type){
+  const file=event.target.files[0];
   if(!file) return;
-  if(file.size > 5 * 1024 * 1024){ showToast('⚠️ Image must be under 5MB','error'); return; }
-
-  const reader = new FileReader();
-  reader.onload = (e) => {
-    const data = e.target.result;
-    const prev = document.getElementById(previewId);
-    prev.innerHTML = `<img src="${data}" alt="preview"/>`;
+  if(file.size>5*1024*1024){ showToast('⚠️ Max 5MB image size','error'); return; }
+  const reader=new FileReader();
+  reader.onload=e=>{
+    const data=e.target.result;
+    document.getElementById(previewId).innerHTML=`<img src="${data}" alt="preview"/>`;
     document.getElementById(areaId).classList.add('has-image');
-
-    // Store in correct variable
-    if(previewId === 'add-photo-preview')  addPhotoData  = data;
-    if(previewId === 'edit-photo-preview') editPhotoData = data;
-    if(previewId === 'side-photo-preview') sidePhotoData = data;
+    photoData[type]=data;
   };
   reader.readAsDataURL(file);
 }
-
-function resetPhotoUpload(previewId, areaId){
-  document.getElementById(previewId).innerHTML = '📷';
+function resetPhoto(previewId, areaId){
+  document.getElementById(previewId).innerHTML='📷';
   document.getElementById(areaId).classList.remove('has-image');
 }
 
-/* ════════════════════════════════════════════════
-   SEARCH
-════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════
+   ACTIVITY LOG
+══════════════════════════════════════════════════════ */
+function logActivity(icon, text){
+  const time = new Date().toLocaleTimeString([], {hour:'2-digit',minute:'2-digit'});
+  activityLog.unshift({ icon, text, time });
+  if(activityLog.length>20) activityLog.pop();
+  renderActivity();
+}
+function renderActivity(){
+  const list=document.getElementById('activity-list');
+  if(!activityLog.length){
+    list.innerHTML='<div class="activity-item"><span class="activity-icon">😴</span><span class="activity-text">No recent activity</span></div>';
+    return;
+  }
+  list.innerHTML=activityLog.map(a=>`
+    <div class="activity-item">
+      <span class="activity-icon">${a.icon}</span>
+      <span class="activity-text">${a.text}</span>
+      <span class="activity-time">${a.time}</span>
+    </div>`).join('');
+}
+function toggleActivity(){
+  activityExpanded=!activityExpanded;
+  document.getElementById('activity-panel').classList.toggle('expanded',activityExpanded);
+  document.getElementById('activity-toggle-icon').textContent=activityExpanded?'▼':'▲';
+}
+
+/* ══════════════════════════════════════════════════════
+   SEARCH / HIGHLIGHT
+══════════════════════════════════════════════════════ */
 document.getElementById('search-input').addEventListener('input', function(){
-  const q = this.value.toLowerCase().trim();
+  const q=this.value.toLowerCase().trim();
   if(!q){ resetHighlight(); return; }
-  members.forEach(m => {
-    const card = document.getElementById(`card-${m.id}`);
-    if(!card) return;
-    const match = `${m.first} ${m.last} ${m.occupation} ${m.location} ${m.role}`.toLowerCase().includes(q);
-    card.classList.toggle('highlight', match);
-    card.classList.toggle('dimmed', !match);
+  members.forEach(m=>{
+    const c=document.getElementById(`card-${m.id}`);
+    if(!c) return;
+    const match=`${m.first} ${m.last} ${m.occupation||''} ${m.location||''} ${m.role||''}`.toLowerCase().includes(q);
+    c.classList.toggle('highlight',match);
+    c.classList.toggle('dimmed',!match);
   });
 });
-
 function resetHighlight(){
-  document.getElementById('search-input').value = '';
-  members.forEach(m => {
-    const c = document.getElementById(`card-${m.id}`);
-    if(c){ c.classList.remove('highlight','dimmed'); }
-  });
+  document.getElementById('search-input').value='';
+  members.forEach(m=>{ const c=document.getElementById(`card-${m.id}`); if(c){ c.classList.remove('highlight','dimmed'); } });
 }
 
-/* ════════════════════════════════════════════════
-   TOGGLE LINES / ZOOM
-════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════
+   OVERLAY HELPERS
+══════════════════════════════════════════════════════ */
+function openOverlay(id){ document.getElementById(id).classList.add('open'); }
+function closeOverlay(id){ document.getElementById(id).classList.remove('open'); }
+function overlayClick(e,id){ if(e.target===document.getElementById(id)) closeOverlay(id); }
+
+/* ══════════════════════════════════════════════════════
+   ZOOM / LINES
+══════════════════════════════════════════════════════ */
 function toggleLines(){ showLines=!showLines; drawLines(); }
-function zoom(f){
-  currentScale = Math.min(Math.max(currentScale*f, 0.3), 3);
-  applyZoom();
-}
+function zoom(f){ currentScale=Math.min(Math.max(currentScale*f,0.3),3); applyZoom(); }
 function zoomReset(){ currentScale=1; applyZoom(); }
 function applyZoom(){
-  const inner = document.getElementById('tree-inner');
-  inner.style.transform = `scale(${currentScale})`;
-  inner.style.transformOrigin = 'top center';
-  setTimeout(drawLines, 150);
+  const inner=document.getElementById('tree-inner');
+  inner.style.transform=`scale(${currentScale})`;
+  inner.style.transformOrigin='top center';
+  setTimeout(drawLines,150);
 }
 
-/* ════════════════════════════════════════════════
+/* ══════════════════════════════════════════════════════
+   SYNC BADGE
+══════════════════════════════════════════════════════ */
+function setSyncBadge(type,msg){
+  const b=document.getElementById('sync-badge');
+  b.className=`sync-badge ${type}`;
+  b.textContent=msg;
+}
+
+/* ══════════════════════════════════════════════════════
    TOAST
-════════════════════════════════════════════════ */
+══════════════════════════════════════════════════════ */
 function showToast(msg, type='success'){
-  const t = document.getElementById('toast');
-  t.textContent = msg;
-  t.className = type==='error' ? 'error-toast show' : 'show';
-  clearTimeout(t._timer);
-  t._timer = setTimeout(()=>{ t.className=''; }, 3200);
+  const t=document.getElementById('toast');
+  t.textContent=msg;
+  t.className=type==='error'?'error-toast show':'show';
+  clearTimeout(t._t);
+  t._t=setTimeout(()=>t.className='', 3200);
 }
 
-/* ════════════════════════════════════════════════
-   PARTICLES
-════════════════════════════════════════════════ */
+/* ══════════════════════════════════════════════════════
+   PARTICLES / RESIZE
+══════════════════════════════════════════════════════ */
 function createParticles(){
-  const c = document.getElementById('particles');
+  const c=document.getElementById('particles');
   for(let i=0;i<30;i++){
     const p=document.createElement('div');
     p.className='particle';
@@ -1207,21 +1297,12 @@ function createParticles(){
   }
 }
 
-/* ════════════════════════════════════════════════
-   RESIZE
-════════════════════════════════════════════════ */
 let resizeTimer;
-window.addEventListener('resize', ()=>{
-  clearTimeout(resizeTimer);
-  resizeTimer = setTimeout(drawLines, 250);
-});
+window.addEventListener('resize',()=>{ clearTimeout(resizeTimer); resizeTimer=setTimeout(drawLines,250); });
 document.getElementById('tree-container').addEventListener('scroll', drawLines);
 
-/* ════════════════════════════════════════════════
-   INIT
-════════════════════════════════════════════════ */
 createParticles();
-render();
+renderActivity();
 </script>
 </body>
 </html>
