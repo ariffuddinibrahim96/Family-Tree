@@ -1,1 +1,1227 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8"/>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0"/>
+  <title>Family Tree - The Ariffuddin Family</title>
+  <script src="https://unpkg.com/decap-cms@^3.0.0/dist/decap-cms.js"></script>
+  <style>
+    *, *::before, *::after { margin:0; padding:0; box-sizing:border-box; }
+    :root {
+      --gold:#f0c040; --gold2:#e0a020; --bg:#0a0c14;
+      --surface:rgba(255,255,255,0.05); --border:rgba(240,192,64,0.25);
+      --text:#e8eaf0; --muted:#8890a8; --line:rgba(240,192,64,0.5);
+      --glow:0 0 20px rgba(240,192,64,0.3); --radius:16px;
+      --red:rgba(255,80,80,0.85); --blue:rgba(80,180,255,0.85);
+      --green:rgba(80,220,160,0.85);
+    }
+    body { font-family:'Segoe UI',system-ui,sans-serif; background:var(--bg); color:var(--text); min-height:100vh; overflow-x:hidden; }
+    body::before {
+      content:''; position:fixed; inset:0; z-index:0;
+      background:
+        radial-gradient(ellipse 80% 50% at 20% 10%,rgba(60,40,120,0.4) 0%,transparent 60%),
+        radial-gradient(ellipse 60% 40% at 80% 80%,rgba(20,80,60,0.3) 0%,transparent 60%),
+        radial-gradient(ellipse 100% 100% at 50% 50%,#0a0c14 0%,#060810 100%);
+      pointer-events:none;
+    }
+    #particles { position:fixed; inset:0; z-index:0; pointer-events:none; overflow:hidden; }
+    .particle { position:absolute; border-radius:50%; background:var(--gold); opacity:0; animation:float linear infinite; }
+    @keyframes float {
+      0%{transform:translateY(100vh) scale(0);opacity:0;}
+      10%{opacity:0.6;} 90%{opacity:0.3;}
+      100%{transform:translateY(-10vh) scale(1);opacity:0;}
+    }
+    #app { position:relative; z-index:1; }
 
+    /* ===== HEADER ===== */
+    header { text-align:center; padding:3rem 2rem 2rem; }
+    .header-badge {
+      display:inline-block; padding:4px 18px;
+      border:1px solid var(--border); border-radius:50px;
+      font-size:0.75rem; letter-spacing:3px; text-transform:uppercase;
+      color:var(--gold); margin-bottom:1rem; background:rgba(240,192,64,0.05);
+    }
+    header h1 {
+      font-size:clamp(2rem,5vw,3.5rem); font-weight:800; letter-spacing:-1px;
+      background:linear-gradient(135deg,#fff 30%,var(--gold) 70%);
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent;
+      background-clip:text; line-height:1.1;
+    }
+    header p { color:var(--muted); margin-top:0.75rem; font-size:1rem; }
+    .stats-bar { display:flex; justify-content:center; gap:2rem; margin-top:1.5rem; flex-wrap:wrap; }
+    .stat-item {
+      text-align:center; background:var(--surface); border:1px solid var(--border);
+      border-radius:12px; padding:0.6rem 1.4rem; backdrop-filter:blur(10px);
+    }
+    .stat-num { font-size:1.5rem; font-weight:700; color:var(--gold); }
+    .stat-label { font-size:0.72rem; color:var(--muted); letter-spacing:1px; text-transform:uppercase; }
+
+    /* ===== TOOLBAR ===== */
+    .toolbar { display:flex; align-items:center; justify-content:center; gap:1rem; padding:1rem 2rem; flex-wrap:wrap; }
+    .search-wrap { position:relative; width:260px; }
+    .search-wrap input {
+      width:100%; padding:0.6rem 1rem 0.6rem 2.5rem;
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:50px; color:var(--text); font-size:0.9rem;
+      outline:none; transition:border-color .3s,box-shadow .3s; backdrop-filter:blur(10px);
+    }
+    .search-wrap input:focus { border-color:var(--gold); box-shadow:var(--glow); }
+    .search-wrap .icon { position:absolute; left:10px; top:50%; transform:translateY(-50%); color:var(--muted); }
+    .btn {
+      padding:0.6rem 1.4rem; border-radius:50px; border:1px solid var(--border);
+      background:var(--surface); color:var(--text); cursor:pointer;
+      font-size:0.85rem; transition:all .3s; backdrop-filter:blur(10px);
+      white-space:nowrap; display:inline-flex; align-items:center; gap:0.4rem;
+    }
+    .btn:hover { background:rgba(240,192,64,0.15); border-color:var(--gold); color:var(--gold); }
+    .btn.primary { background:linear-gradient(135deg,var(--gold2),var(--gold)); color:#000; border-color:transparent; font-weight:600; }
+    .btn.primary:hover { transform:translateY(-2px); box-shadow:var(--glow); color:#000; }
+    .btn.danger { border-color:rgba(255,80,80,0.4); }
+    .btn.danger:hover { background:rgba(255,80,80,0.15); border-color:#ff5050; color:#ff5050; }
+    .btn.success { border-color:rgba(80,220,160,0.4); }
+    .btn.success:hover { background:rgba(80,220,160,0.15); border-color:#4ade80; color:#4ade80; }
+
+    /* ===== TREE CONTAINER ===== */
+    #tree-container { position:relative; width:100%; overflow:auto; padding:2rem 1rem 4rem; min-height:400px; }
+    #tree-svg { position:absolute; top:0; left:0; width:100%; height:100%; pointer-events:none; z-index:0; }
+    #tree-inner { position:relative; z-index:1; min-width:1000px; }
+
+    /* ===== GENERATION ROW ===== */
+    .gen-section { margin-bottom:0; }
+    .gen-label {
+      text-align:center; font-size:0.72rem; letter-spacing:2px;
+      text-transform:uppercase; color:var(--gold); opacity:0.7; margin-bottom:0.5rem; padding-top:0.5rem;
+    }
+    .gen-row {
+      display:flex; justify-content:center; gap:2.5rem; flex-wrap:wrap;
+      padding:0.5rem 2rem; align-items:flex-start;
+    }
+
+    /* ===== MEMBER WRAPPER (Card + Side Buttons) ===== */
+    .member-wrapper {
+      display:flex; align-items:center; gap:0.5rem; position:relative;
+    }
+    .side-add-btn {
+      width:32px; height:32px; border-radius:50%;
+      background:rgba(80,220,160,0.1); border:1px dashed rgba(80,220,160,0.5);
+      color:#4ade80; cursor:pointer; display:flex; align-items:center;
+      justify-content:center; font-size:1rem; transition:all .3s;
+      opacity:0; flex-shrink:0;
+    }
+    .member-wrapper:hover .side-add-btn { opacity:1; }
+    .side-add-btn:hover { background:rgba(80,220,160,0.25); transform:scale(1.1); }
+    .side-add-btn.left { order:-1; }
+    .side-add-btn.right { order:1; }
+
+    /* ===== MEMBER CARD ===== */
+    .member-card {
+      width:155px; background:var(--surface); border:1px solid var(--border);
+      border-radius:var(--radius); padding:1.2rem 1rem 0.8rem; text-align:center;
+      cursor:pointer; transition:transform .3s,box-shadow .3s,border-color .3s;
+      backdrop-filter:blur(14px); position:relative; overflow:hidden;
+      animation:cardIn .5s ease both;
+    }
+    @keyframes cardIn { from{opacity:0;transform:translateY(30px);}to{opacity:1;transform:translateY(0);} }
+    .member-card::before {
+      content:''; position:absolute; inset:0;
+      background:linear-gradient(135deg,rgba(240,192,64,0.07) 0%,transparent 60%);
+      opacity:0; transition:opacity .3s;
+    }
+    .member-card:hover::before { opacity:1; }
+    .member-card:hover { transform:translateY(-6px) scale(1.02); box-shadow:0 20px 40px rgba(0,0,0,0.5),var(--glow); border-color:var(--gold); }
+    .member-card.highlight { border-color:var(--gold); box-shadow:var(--glow); }
+    .member-card.dimmed { opacity:0.3; }
+
+    /* Card Action Buttons */
+    .card-actions {
+      display:flex; gap:0.3rem; justify-content:center;
+      margin-top:0.6rem; opacity:0; transition:opacity .3s;
+    }
+    .member-card:hover .card-actions { opacity:1; }
+    .card-btn {
+      padding:3px 8px; border-radius:8px; border:1px solid transparent;
+      font-size:0.65rem; cursor:pointer; transition:all .2s; font-weight:600;
+      letter-spacing:0.3px;
+    }
+    .card-btn.edit-btn {
+      background:rgba(80,180,255,0.15); border-color:rgba(80,180,255,0.4); color:#50b4ff;
+    }
+    .card-btn.edit-btn:hover { background:rgba(80,180,255,0.3); }
+    .card-btn.delete-btn {
+      background:rgba(255,80,80,0.15); border-color:rgba(255,80,80,0.4); color:#ff5050;
+    }
+    .card-btn.delete-btn:hover { background:rgba(255,80,80,0.3); }
+    .card-btn.view-btn {
+      background:rgba(240,192,64,0.15); border-color:rgba(240,192,64,0.4); color:var(--gold);
+    }
+    .card-btn.view-btn:hover { background:rgba(240,192,64,0.3); }
+
+    /* Avatar */
+    .avatar {
+      width:64px; height:64px; border-radius:50%; margin:0 auto 0.75rem;
+      display:flex; align-items:center; justify-content:center;
+      font-size:1.4rem; font-weight:700; color:#000;
+      position:relative; border:2px solid var(--border); transition:border-color .3s;
+      overflow:hidden;
+    }
+    .member-card:hover .avatar { border-color:var(--gold); }
+    .avatar img { width:100%; height:100%; object-fit:cover; position:absolute; inset:0; border-radius:50%; }
+    .avatar-ring {
+      position:absolute; inset:-4px; border-radius:50%;
+      border:2px solid transparent;
+      background:linear-gradient(135deg,var(--gold),transparent) border-box;
+      -webkit-mask:linear-gradient(#fff 0 0) padding-box,linear-gradient(#fff 0 0);
+      -webkit-mask-composite:destination-out; mask-composite:exclude;
+    }
+    .member-name { font-size:0.85rem; font-weight:600; color:#fff; line-height:1.2; margin-bottom:0.25rem; }
+    .member-year { font-size:0.72rem; color:var(--muted); }
+    .member-role {
+      display:inline-block; margin-top:0.4rem; padding:2px 10px;
+      border-radius:20px; font-size:0.63rem; letter-spacing:0.5px;
+      font-weight:600; text-transform:uppercase;
+    }
+    .role-patriarch  { background:rgba(255,165,0,0.2);  color:#ffa500; }
+    .role-matriarch  { background:rgba(255,100,150,0.2); color:#ff7eb3; }
+    .role-son        { background:rgba(80,180,255,0.2);  color:#50b4ff; }
+    .role-daughter   { background:rgba(180,120,255,0.2); color:#c084fc; }
+    .role-husband    { background:rgba(80,220,160,0.2);  color:#4ade80; }
+    .role-wife       { background:rgba(255,180,80,0.2);  color:#fbbf24; }
+    .role-grandchild { background:rgba(255,220,80,0.2);  color:#fde047; }
+    .role-greatgrand { background:rgba(100,220,255,0.2); color:#67e8f9; }
+    .role-g6member   { background:rgba(255,150,200,0.2); color:#f9a8d4; }
+    .role-spouse     { background:rgba(160,220,100,0.2); color:#a3e635; }
+
+    /* Spacer row between gens */
+    .gen-spacer { height:60px; }
+
+    /* ===== MODALS BASE ===== */
+    .overlay {
+      position:fixed; inset:0; z-index:100; background:rgba(0,0,0,0.8);
+      backdrop-filter:blur(8px); display:none; align-items:center;
+      justify-content:center; padding:1rem;
+    }
+    .overlay.open { display:flex; }
+    .modal-box {
+      background:linear-gradient(135deg,#131828 0%,#0e1420 100%);
+      border:1px solid var(--border); border-radius:24px; padding:2.5rem;
+      width:100%; max-width:500px; position:relative;
+      animation:modalIn .35s cubic-bezier(.2,.8,.3,1) both;
+      box-shadow:0 40px 80px rgba(0,0,0,0.6),var(--glow);
+      max-height:90vh; overflow-y:auto;
+    }
+    @keyframes modalIn { from{opacity:0;transform:scale(.85) translateY(30px);}to{opacity:1;transform:scale(1) translateY(0);} }
+    .modal-close-btn {
+      position:absolute; top:1rem; right:1rem;
+      width:32px; height:32px; border-radius:50%;
+      background:var(--surface); border:1px solid var(--border);
+      color:var(--muted); cursor:pointer; display:flex;
+      align-items:center; justify-content:center; font-size:1rem; transition:all .2s;
+    }
+    .modal-close-btn:hover { background:rgba(255,80,80,0.2); color:#ff6060; border-color:#ff6060; }
+    .modal-title {
+      font-size:1.5rem; font-weight:700; margin-bottom:1.5rem;
+      background:linear-gradient(135deg,#fff,var(--gold));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+    }
+
+    /* ===== FORM STYLES ===== */
+    .form-group { margin-bottom:1rem; }
+    .form-group label {
+      display:block; font-size:0.78rem; color:var(--muted);
+      margin-bottom:0.4rem; text-transform:uppercase; letter-spacing:1px;
+    }
+    .form-group input,
+    .form-group select,
+    .form-group textarea {
+      width:100%; padding:0.65rem 1rem;
+      background:var(--surface); border:1px solid var(--border);
+      border-radius:10px; color:var(--text); font-size:0.9rem;
+      outline:none; transition:border-color .3s; font-family:inherit;
+    }
+    .form-group input:focus,
+    .form-group select:focus,
+    .form-group textarea:focus { border-color:var(--gold); }
+    .form-group select option { background:#131828; }
+    .form-group textarea { resize:vertical; min-height:80px; }
+    .form-row { display:grid; grid-template-columns:1fr 1fr; gap:1rem; }
+    .form-actions { display:flex; gap:1rem; margin-top:1.5rem; }
+    .form-actions .btn { flex:1; justify-content:center; }
+
+    /* ===== PHOTO UPLOAD ===== */
+    .photo-upload-area {
+      border:2px dashed var(--border); border-radius:16px; padding:1.5rem;
+      text-align:center; cursor:pointer; transition:all .3s; position:relative;
+      margin-bottom:1rem;
+    }
+    .photo-upload-area:hover { border-color:var(--gold); background:rgba(240,192,64,0.05); }
+    .photo-upload-area.has-image { border-color:var(--gold); border-style:solid; }
+    .photo-upload-area input[type="file"] { position:absolute; inset:0; opacity:0; cursor:pointer; width:100%; height:100%; }
+    .photo-preview {
+      width:80px; height:80px; border-radius:50%; margin:0 auto 0.75rem;
+      overflow:hidden; border:3px solid var(--gold);
+      display:flex; align-items:center; justify-content:center;
+      background:var(--surface); font-size:2rem;
+    }
+    .photo-preview img { width:100%; height:100%; object-fit:cover; }
+    .upload-text { font-size:0.85rem; color:var(--muted); }
+    .upload-text span { color:var(--gold); font-weight:600; }
+    .upload-hint { font-size:0.72rem; color:var(--muted); margin-top:0.25rem; }
+
+    /* ===== VIEW MODAL ===== */
+    .view-modal-box { max-width:480px; }
+    .modal-avatar-lg {
+      width:90px; height:90px; border-radius:50%; margin:0 auto 1.5rem;
+      display:flex; align-items:center; justify-content:center;
+      font-size:2rem; font-weight:800; color:#000;
+      border:3px solid var(--gold); box-shadow:0 0 30px rgba(240,192,64,0.4);
+      overflow:hidden;
+    }
+    .modal-avatar-lg img { width:100%; height:100%; object-fit:cover; }
+    .modal-member-name {
+      font-size:1.6rem; font-weight:700; text-align:center;
+      background:linear-gradient(135deg,#fff,var(--gold));
+      -webkit-background-clip:text; -webkit-text-fill-color:transparent; background-clip:text;
+    }
+    .modal-role-center { text-align:center; margin:0.5rem 0 1.5rem; }
+    .info-grid { display:grid; grid-template-columns:1fr 1fr; gap:0.75rem; margin-top:1rem; }
+    .info-item { background:var(--surface); border:1px solid var(--border); border-radius:12px; padding:0.75rem 1rem; }
+    .info-item.full { grid-column:1/-1; }
+    .info-key { font-size:0.68rem; color:var(--muted); text-transform:uppercase; letter-spacing:1px; }
+    .info-value { font-size:0.92rem; font-weight:600; color:#fff; margin-top:2px; }
+    .rel-tag { display:inline-block; padding:3px 10px; background:rgba(240,192,64,0.12); border:1px solid rgba(240,192,64,0.3); border-radius:20px; font-size:0.75rem; color:var(--gold); margin:2px; }
+    .view-actions { display:flex; gap:0.75rem; margin-top:1.5rem; }
+    .view-actions .btn { flex:1; justify-content:center; }
+
+    /* ===== DELETE CONFIRM MODAL ===== */
+    .delete-modal-box { max-width:400px; text-align:center; }
+    .delete-icon { font-size:3.5rem; margin-bottom:1rem; }
+    .delete-modal-box h2 { font-size:1.4rem; font-weight:700; margin-bottom:0.5rem; color:#fff; }
+    .delete-modal-box p { color:var(--muted); font-size:0.9rem; margin-bottom:1.5rem; line-height:1.5; }
+    .delete-name-highlight { color:var(--gold); font-weight:700; }
+
+    /* ===== SIDE ADD MODAL ===== */
+    .side-info-banner {
+      background:rgba(80,220,160,0.08); border:1px solid rgba(80,220,160,0.3);
+      border-radius:12px; padding:0.75rem 1rem; margin-bottom:1.2rem;
+      font-size:0.82rem; color:#4ade80; display:flex; align-items:center; gap:0.5rem;
+    }
+
+    /* ===== LEGEND ===== */
+    .legend { display:flex; justify-content:center; gap:1.5rem; flex-wrap:wrap; padding:1rem 2rem 2rem; }
+    .legend-item { display:flex; align-items:center; gap:0.4rem; font-size:0.78rem; color:var(--muted); }
+    .legend-dot { width:10px; height:10px; border-radius:50%; }
+
+    /* ===== ZOOM ===== */
+    .zoom-controls { position:fixed; bottom:2rem; right:2rem; display:flex; flex-direction:column; gap:0.5rem; z-index:10; }
+    .zoom-btn {
+      width:44px; height:44px; border-radius:50%;
+      background:var(--surface); border:1px solid var(--border);
+      color:var(--text); font-size:1.2rem; cursor:pointer;
+      display:flex; align-items:center; justify-content:center;
+      transition:all .3s; backdrop-filter:blur(10px);
+    }
+    .zoom-btn:hover { background:rgba(240,192,64,0.2); border-color:var(--gold); color:var(--gold); }
+
+    /* ===== TOAST ===== */
+    #toast {
+      position:fixed; bottom:2rem; left:50%; transform:translateX(-50%);
+      background:linear-gradient(135deg,var(--gold2),var(--gold));
+      color:#000; padding:0.75rem 1.5rem; border-radius:50px;
+      font-size:0.9rem; font-weight:600; z-index:999;
+      opacity:0; pointer-events:none; transition:opacity .3s;
+      box-shadow:var(--glow); white-space:nowrap;
+    }
+    #toast.show { opacity:1; }
+    #toast.error-toast {
+      background:linear-gradient(135deg,#c02020,#ff4040); color:#fff;
+    }
+
+    /* Scrollbar */
+    ::-webkit-scrollbar { width:6px; height:6px; }
+    ::-webkit-scrollbar-track { background:#0a0c14; }
+    ::-webkit-scrollbar-thumb { background:rgba(240,192,64,0.3); border-radius:3px; }
+    ::-webkit-scrollbar-thumb:hover { background:var(--gold); }
+
+    @media(max-width:600px) {
+      .member-card { width:120px; padding:0.9rem 0.6rem; }
+      .avatar { width:50px; height:50px; font-size:1rem; }
+      .gen-row { gap:0.75rem; }
+      .side-add-btn { width:26px; height:26px; font-size:0.8rem; opacity:1; }
+    }
+  </style>
+</head>
+<body>
+<div id="particles"></div>
+<div id="app">
+
+  <!-- HEADER -->
+  <header>
+    <div class="header-badge">🌳 Family Heritage Baby</div>
+    <h1>The Ariffuddin Family</h1>
+    <p>Yeehaaaa</p>
+    <div class="stats-bar">
+      <div class="stat-item"><div class="stat-num" id="stat-members">0</div><div class="stat-label">Members</div></div>
+      <div class="stat-item"><div class="stat-num" id="stat-gens">6</div><div class="stat-label">Generations</div></div>
+      <div class="stat-item"><div class="stat-num">1940</div><div class="stat-label">Since</div></div>
+      <div class="stat-item"><div class="stat-num" id="stat-marriages">0</div><div class="stat-label">Marriages</div></div>
+    </div>
+  </header>
+
+  <!-- TOOLBAR -->
+  <div class="toolbar">
+    <div class="search-wrap">
+      <span class="icon">🔍</span>
+      <input type="text" id="search-input" placeholder="Search family members…"/>
+    </div>
+    <button class="btn" onclick="resetHighlight()">🔄 Reset</button>
+    <button class="btn" onclick="toggleLines()">🔗 Toggle Lines</button>
+    <button class="btn primary" onclick="openAddModal()">➕ Add Member</button>
+  </div>
+
+  <!-- TREE -->
+  <div id="tree-container">
+    <svg id="tree-svg"></svg>
+    <div id="tree-inner"></div>
+  </div>
+
+  <!-- LEGEND -->
+  <div class="legend">
+    <div class="legend-item"><div class="legend-dot" style="background:#ffa500"></div>Patriarch</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#ff7eb3"></div>Matriarch</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#50b4ff"></div>Son</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#c084fc"></div>Daughter</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#4ade80"></div>Husband</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#fbbf24"></div>Wife</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#fde047"></div>Grandchild</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#67e8f9"></div>Great-Grandchild</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#f9a8d4"></div>Gen 6</div>
+    <div class="legend-item"><div class="legend-dot" style="background:#a3e635"></div>Spouse</div>
+  </div>
+</div>
+
+<!-- ZOOM -->
+<div class="zoom-controls">
+  <button class="zoom-btn" onclick="zoom(1.15)" title="Zoom In">＋</button>
+  <button class="zoom-btn" onclick="zoom(0.87)" title="Zoom Out">－</button>
+  <button class="zoom-btn" onclick="zoomReset()" title="Reset" style="font-size:0.8rem">↺</button>
+</div>
+
+<!-- ═══════════════════════════════════════
+     MODAL 1 — VIEW MEMBER
+═══════════════════════════════════════ -->
+<div id="view-overlay" class="overlay" onclick="overlayClick(event,'view-overlay')">
+  <div class="modal-box view-modal-box">
+    <button class="modal-close-btn" onclick="closeOverlay('view-overlay')">✕</button>
+    <div class="modal-avatar-lg" id="vm-avatar"></div>
+    <div class="modal-member-name" id="vm-name"></div>
+    <div class="modal-role-center" id="vm-role"></div>
+    <div class="info-grid" id="vm-info"></div>
+    <div class="view-actions">
+      <button class="btn success" id="vm-edit-btn" onclick="openEditFromView()">✏️ Edit</button>
+      <button class="btn danger"  id="vm-del-btn"  onclick="openDeleteFromView()">🗑️ Delete</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     MODAL 2 — ADD MEMBER
+═══════════════════════════════════════ -->
+<div id="add-overlay" class="overlay" onclick="overlayClick(event,'add-overlay')">
+  <div class="modal-box">
+    <button class="modal-close-btn" onclick="closeOverlay('add-overlay')">✕</button>
+    <div class="modal-title">🌱 Add Family Member</div>
+
+    <!-- Photo Upload -->
+    <div class="photo-upload-area" id="add-photo-area" onclick="triggerUpload('add-photo-input')">
+      <input type="file" id="add-photo-input" accept="image/*" onchange="handlePhotoUpload(event,'add-photo-preview','add-photo-area')" onclick="event.stopPropagation()"/>
+      <div class="photo-preview" id="add-photo-preview">📷</div>
+      <div class="upload-text">Click to <span>Upload Photo</span></div>
+      <div class="upload-hint">JPG, PNG or GIF · Max 5MB</div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group"><label>First Name *</label><input type="text" id="a-first" placeholder="John"/></div>
+      <div class="form-group"><label>Last Name *</label><input type="text" id="a-last" placeholder="Anderson"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Birth Year</label><input type="number" id="a-birth" placeholder="1990"/></div>
+      <div class="form-group"><label>Death Year</label><input type="number" id="a-death" placeholder="(if applicable)"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Generation</label>
+        <select id="a-gen">
+          <option value="1">Gen 1 – Founders</option>
+          <option value="2">Gen 2 – Parents</option>
+          <option value="3" selected>Gen 3 – Children</option>
+          <option value="4">Gen 4 – Grandchildren</option>
+          <option value="5">Gen 5 – Great-Grandchildren</option>
+          <option value="6">Gen 6 – Next Generation</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="a-role">
+          <option value="patriarch">Patriarch</option>
+          <option value="matriarch">Matriarch</option>
+          <option value="son">Son</option>
+          <option value="daughter">Daughter</option>
+          <option value="husband">Husband</option>
+          <option value="wife">Wife</option>
+          <option value="grandchild">Grandchild</option>
+          <option value="greatgrand">Great-Grandchild</option>
+          <option value="g6member">Gen 6 Member</option>
+          <option value="spouse">Spouse</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Location</label><input type="text" id="a-loc" placeholder="New York, USA"/></div>
+      <div class="form-group"><label>Occupation</label><input type="text" id="a-occ" placeholder="Engineer"/></div>
+    </div>
+    <div class="form-group"><label>Hobbies</label><input type="text" id="a-hobby" placeholder="Reading, Cooking…"/></div>
+    <div class="form-group"><label>About</label><textarea id="a-bio" placeholder="A few words about this family member…"></textarea></div>
+    <div class="form-actions">
+      <button class="btn" onclick="closeOverlay('add-overlay')">Cancel</button>
+      <button class="btn primary" onclick="addMember()">Add Member 🌱</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     MODAL 3 — EDIT MEMBER
+═══════════════════════════════════════ -->
+<div id="edit-overlay" class="overlay" onclick="overlayClick(event,'edit-overlay')">
+  <div class="modal-box">
+    <button class="modal-close-btn" onclick="closeOverlay('edit-overlay')">✕</button>
+    <div class="modal-title">✏️ Edit Family Member</div>
+
+    <!-- Photo Upload -->
+    <div class="photo-upload-area" id="edit-photo-area" onclick="triggerUpload('edit-photo-input')">
+      <input type="file" id="edit-photo-input" accept="image/*" onchange="handlePhotoUpload(event,'edit-photo-preview','edit-photo-area')" onclick="event.stopPropagation()"/>
+      <div class="photo-preview" id="edit-photo-preview">📷</div>
+      <div class="upload-text">Click to <span>Change Photo</span></div>
+      <div class="upload-hint">JPG, PNG or GIF · Max 5MB</div>
+    </div>
+
+    <input type="hidden" id="e-id"/>
+    <div class="form-row">
+      <div class="form-group"><label>First Name *</label><input type="text" id="e-first" placeholder="John"/></div>
+      <div class="form-group"><label>Last Name *</label><input type="text" id="e-last" placeholder="Anderson"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Birth Year</label><input type="number" id="e-birth" placeholder="1990"/></div>
+      <div class="form-group"><label>Death Year</label><input type="number" id="e-death" placeholder="(if applicable)"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Generation</label>
+        <select id="e-gen">
+          <option value="1">Gen 1 – Founders</option>
+          <option value="2">Gen 2 – Parents</option>
+          <option value="3">Gen 3 – Children</option>
+          <option value="4">Gen 4 – Grandchildren</option>
+          <option value="5">Gen 5 – Great-Grandchildren</option>
+          <option value="6">Gen 6 – Next Generation</option>
+        </select>
+      </div>
+      <div class="form-group">
+        <label>Role</label>
+        <select id="e-role">
+          <option value="patriarch">Patriarch</option>
+          <option value="matriarch">Matriarch</option>
+          <option value="son">Son</option>
+          <option value="daughter">Daughter</option>
+          <option value="husband">Husband</option>
+          <option value="wife">Wife</option>
+          <option value="grandchild">Grandchild</option>
+          <option value="greatgrand">Great-Grandchild</option>
+          <option value="g6member">Gen 6 Member</option>
+          <option value="spouse">Spouse</option>
+        </select>
+      </div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Location</label><input type="text" id="e-loc" placeholder="New York, USA"/></div>
+      <div class="form-group"><label>Occupation</label><input type="text" id="e-occ" placeholder="Engineer"/></div>
+    </div>
+    <div class="form-group"><label>Hobbies</label><input type="text" id="e-hobby" placeholder="Reading, Cooking…"/></div>
+    <div class="form-group"><label>About</label><textarea id="e-bio" placeholder="About this family member…"></textarea></div>
+    <div class="form-actions">
+      <button class="btn" onclick="closeOverlay('edit-overlay')">Cancel</button>
+      <button class="btn primary" onclick="saveEdit()">💾 Save Changes</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     MODAL 4 — DELETE CONFIRM
+═══════════════════════════════════════ -->
+<div id="delete-overlay" class="overlay" onclick="overlayClick(event,'delete-overlay')">
+  <div class="modal-box delete-modal-box">
+    <button class="modal-close-btn" onclick="closeOverlay('delete-overlay')">✕</button>
+    <div class="delete-icon">🗑️</div>
+    <h2>Remove Family Member?</h2>
+    <p>Are you sure you want to remove <span class="delete-name-highlight" id="del-name"></span> from the family tree? This action cannot be undone.</p>
+    <div class="form-actions">
+      <button class="btn" onclick="closeOverlay('delete-overlay')">Cancel</button>
+      <button class="btn danger" onclick="confirmDelete()" style="background:rgba(255,80,80,0.2);border-color:#ff5050;color:#ff5050;">🗑️ Yes, Remove</button>
+    </div>
+  </div>
+</div>
+
+<!-- ═══════════════════════════════════════
+     MODAL 5 — ADD SIDE MEMBER (SPOUSE)
+═══════════════════════════════════════ -->
+<div id="side-overlay" class="overlay" onclick="overlayClick(event,'side-overlay')">
+  <div class="modal-box">
+    <button class="modal-close-btn" onclick="closeOverlay('side-overlay')">✕</button>
+    <div class="modal-title">💑 Add Partner / Spouse</div>
+    <div class="side-info-banner">💡 This member will appear <strong id="side-position-label">beside</strong> <strong id="side-target-name">—</strong> as their partner.</div>
+    <input type="hidden" id="s-linked-id"/>
+
+    <!-- Photo Upload -->
+    <div class="photo-upload-area" id="side-photo-area" onclick="triggerUpload('side-photo-input')">
+      <input type="file" id="side-photo-input" accept="image/*" onchange="handlePhotoUpload(event,'side-photo-preview','side-photo-area')" onclick="event.stopPropagation()"/>
+      <div class="photo-preview" id="side-photo-preview">📷</div>
+      <div class="upload-text">Click to <span>Upload Photo</span></div>
+      <div class="upload-hint">JPG, PNG or GIF · Max 5MB</div>
+    </div>
+
+    <div class="form-row">
+      <div class="form-group"><label>First Name *</label><input type="text" id="s-first" placeholder="Jane"/></div>
+      <div class="form-group"><label>Last Name *</label><input type="text" id="s-last" placeholder="Smith"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group"><label>Birth Year</label><input type="number" id="s-birth" placeholder="1990"/></div>
+      <div class="form-group"><label>Death Year</label><input type="number" id="s-death" placeholder="(if applicable)"/></div>
+    </div>
+    <div class="form-row">
+      <div class="form-group">
+        <label>Role</label>
+        <select id="s-role">
+          <option value="wife">Wife</option>
+          <option value="husband">Husband</option>
+          <option value="spouse">Spouse / Partner</option>
+          <option value="matriarch">Matriarch</option>
+          <option value="patriarch">Patriarch</option>
+        </select>
+      </div>
+      <div class="form-group"><label>Location</label><input type="text" id="s-loc" placeholder="New York, USA"/></div>
+    </div>
+    <div class="form-group"><label>Occupation</label><input type="text" id="s-occ" placeholder="Doctor"/></div>
+    <div class="form-group"><label>Hobbies</label><input type="text" id="s-hobby" placeholder="Cooking, Gardening…"/></div>
+    <div class="form-group"><label>About</label><textarea id="s-bio" placeholder="About this person…"></textarea></div>
+    <div class="form-actions">
+      <button class="btn" onclick="closeOverlay('side-overlay')">Cancel</button>
+      <button class="btn primary" onclick="addSideMember()">💑 Add Partner</button>
+    </div>
+  </div>
+</div>
+
+<!-- TOAST -->
+<div id="toast"></div>
+
+<script>
+/* ════════════════════════════════════════════════
+   DATA
+════════════════════════════════════════════════ */
+let members = [
+  // GEN 1
+  { id:1,gen:1,first:"Robert",last:"Anderson",birth:1940,death:null,gender:"male",role:"patriarch",location:"Boston, MA",occupation:"Retired Engineer",spouseId:2,parents:[],children:[3,5],bio:"Founding patriarch. Served in the military and built a successful engineering career.",hobby:"Woodworking, Chess",photo:null },
+  { id:2,gen:1,first:"Margaret",last:"Anderson",birth:1942,death:null,gender:"female",role:"matriarch",location:"Boston, MA",occupation:"Retired Teacher",spouseId:1,parents:[],children:[3,5],bio:"Beloved kindergarten teacher for 30 years. Known for her apple pies and warm heart.",hobby:"Gardening, Reading",photo:null },
+  // GEN 2
+  { id:3,gen:2,first:"William",last:"Anderson",birth:1965,death:null,gender:"male",role:"son",location:"New York, NY",occupation:"Architect",spouseId:4,parents:[1,2],children:[7,8,9],bio:"Award-winning architect who redesigned the city's skyline.",hobby:"Hiking, Jazz",photo:null },
+  { id:4,gen:2,first:"Sarah",last:"Anderson",birth:1967,death:null,gender:"female",role:"wife",location:"New York, NY",occupation:"Pediatrician",spouseId:3,parents:[],children:[7,8,9],bio:"Dedicated pediatrician passionate about community healthcare.",hobby:"Yoga, Cooking",photo:null },
+  { id:5,gen:2,first:"Elizabeth",last:"Carter",birth:1968,death:null,gender:"female",role:"daughter",location:"Chicago, IL",occupation:"Professor",spouseId:6,parents:[1,2],children:[10,11],bio:"History professor at Northwestern University. Published author.",hobby:"Writing, Travel",photo:null },
+  { id:6,gen:2,first:"James",last:"Carter",birth:1966,death:null,gender:"male",role:"husband",location:"Chicago, IL",occupation:"Surgeon",spouseId:5,parents:[],children:[10,11],bio:"Renowned cardiac surgeon. Over 2,000 successful heart surgeries.",hobby:"Golf, Photography",photo:null },
+  // GEN 3
+  { id:7,gen:3,first:"Michael",last:"Anderson",birth:1990,death:null,gender:"male",role:"son",location:"San Francisco, CA",occupation:"Software Engineer",spouseId:null,parents:[3,4],children:[12],bio:"Full-stack developer. Loves open-source and rock climbing.",hobby:"Rock Climbing, Coding",photo:null },
+  { id:8,gen:3,first:"Emma",last:"Anderson",birth:1992,death:null,gender:"female",role:"daughter",location:"Los Angeles, CA",occupation:"Graphic Designer",spouseId:null,parents:[3,4],children:[],bio:"Creative director at a branding agency.",hobby:"Painting, Surfing",photo:null },
+  { id:9,gen:3,first:"Oliver",last:"Anderson",birth:1993,death:null,gender:"male",role:"son",location:"Seattle, WA",occupation:"Marine Biologist",spouseId:null,parents:[3,4],children:[],bio:"Researching coral reef restoration in 40+ countries.",hobby:"Scuba Diving, Photography",photo:null },
+  { id:10,gen:3,first:"Sophia",last:"Carter",birth:1991,death:null,gender:"female",role:"daughter",location:"Chicago, IL",occupation:"Lawyer",spouseId:null,parents:[5,6],children:[13],bio:"Civil rights attorney. Forbes 30 Under 30.",hobby:"Running, Piano",photo:null },
+  { id:11,gen:3,first:"Noah",last:"Carter",birth:1994,death:null,gender:"male",role:"son",location:"Austin, TX",occupation:"Entrepreneur",spouseId:null,parents:[5,6],children:[],bio:"Founded a sustainable tech startup valued at $50M.",hobby:"Skydiving, Guitar",photo:null },
+  // GEN 4
+  { id:12,gen:4,first:"Lily",last:"Anderson",birth:2015,death:null,gender:"female",role:"grandchild",location:"San Francisco, CA",occupation:"Student",spouseId:null,parents:[7],children:[14],bio:"Loves dinosaurs, painting, and her pet goldfish Bubbles.",hobby:"Drawing, Dancing",photo:null },
+  { id:13,gen:4,first:"Ethan",last:"Carter",birth:2017,death:null,gender:"male",role:"grandchild",location:"Chicago, IL",occupation:"Student",spouseId:null,parents:[10],children:[15],bio:"Shows talent for music and loves superheroes.",hobby:"Building Blocks, Music",photo:null },
+  // GEN 5
+  { id:14,gen:5,first:"Zoe",last:"Anderson",birth:2040,death:null,gender:"female",role:"greatgrand",location:"San Francisco, CA",occupation:"Future Student",spouseId:null,parents:[12],children:[16],bio:"The next generation. Full of wonder and curiosity.",hobby:"TBD",photo:null },
+  { id:15,gen:5,first:"Lucas",last:"Carter",birth:2042,death:null,gender:"male",role:"greatgrand",location:"Chicago, IL",occupation:"Future Student",spouseId:null,parents:[13],children:[],bio:"The newest joy of the Carter branch.",hobby:"TBD",photo:null },
+  // GEN 6
+  { id:16,gen:6,first:"Aurora",last:"Anderson",birth:2065,death:null,gender:"female",role:"g6member",location:"Future City",occupation:"Future Student",spouseId:null,parents:[14],children:[],bio:"The shining hope of the 6th generation.",hobby:"TBD",photo:null },
+];
+
+let nextId = 200;
+let currentEditId = null;
+let currentDeleteId = null;
+let currentSideLinkedId = null;
+let currentViewId = null;
+let showLines = true;
+let currentScale = 1;
+let addPhotoData = null;
+let editPhotoData = null;
+let sidePhotoData = null;
+
+/* ════════════════════════════════════════════════
+   AVATAR HELPERS
+════════════════════════════════════════════════ */
+const avatarPalette = [
+  ["#f0c040","#8a6000"],["#ff7eb3","#c03060"],["#50b4ff","#1060a0"],
+  ["#c084fc","#7030c0"],["#4ade80","#1a8040"],["#fbbf24","#b06000"],
+  ["#fde047","#a09000"],["#fb923c","#b04010"],["#38bdf8","#086090"],
+  ["#a78bfa","#5020b0"],["#f472b6","#b02070"],["#34d399","#0a6040"]
+];
+function avatarColor(id){ return avatarPalette[id % avatarPalette.length]; }
+function initials(f,l){ return (f[0]+(l?l[0]:'')).toUpperCase(); }
+
+/* ════════════════════════════════════════════════
+   RENDER
+════════════════════════════════════════════════ */
+function render(){
+  const inner = document.getElementById('tree-inner');
+  inner.innerHTML = '';
+
+  const genNames = {
+    1:'🌿 Generation I — Founders',
+    2:'🌳 Generation II — Parents',
+    3:'🍃 Generation III — Children',
+    4:'🌱 Generation IV — Grandchildren',
+    5:'✨ Generation V — Great-Grandchildren',
+    6:'🌟 Generation VI — Next Generation'
+  };
+
+  for(let g=1; g<=6; g++){
+    const rows = members.filter(m=>m.gen===g);
+    if(!rows.length) continue;
+
+    const section = document.createElement('div');
+    section.className = 'gen-section';
+
+    const lbl = document.createElement('div');
+    lbl.className = 'gen-label';
+    lbl.textContent = genNames[g];
+    section.appendChild(lbl);
+
+    const row = document.createElement('div');
+    row.className = 'gen-row';
+    row.dataset.gen = g;
+
+    rows.forEach((m,i) => {
+      const wrapper = buildWrapper(m, i);
+      row.appendChild(wrapper);
+    });
+
+    section.appendChild(row);
+
+    const spacer = document.createElement('div');
+    spacer.className = 'gen-spacer';
+    section.appendChild(spacer);
+
+    inner.appendChild(section);
+  }
+
+  updateStats();
+  setTimeout(drawLines, 150);
+}
+
+function buildWrapper(m, idx){
+  const wrapper = document.createElement('div');
+  wrapper.className = 'member-wrapper';
+  wrapper.id = `wrapper-${m.id}`;
+
+  // Left add button
+  const leftBtn = document.createElement('button');
+  leftBtn.className = 'side-add-btn left';
+  leftBtn.title = 'Add partner/spouse to the left';
+  leftBtn.innerHTML = '👈 +';
+  leftBtn.onclick = (e)=>{ e.stopPropagation(); openSideModal(m.id,'left'); };
+
+  // Card
+  const card = buildCard(m, idx);
+
+  // Right add button
+  const rightBtn = document.createElement('button');
+  rightBtn.className = 'side-add-btn right';
+  rightBtn.title = 'Add partner/spouse to the right';
+  rightBtn.innerHTML = '+ 👉';
+  rightBtn.onclick = (e)=>{ e.stopPropagation(); openSideModal(m.id,'right'); };
+
+  wrapper.appendChild(leftBtn);
+  wrapper.appendChild(card);
+  wrapper.appendChild(rightBtn);
+  return wrapper;
+}
+
+function buildCard(m, idx){
+  const [bg] = avatarColor(m.id);
+  const card = document.createElement('div');
+  card.className = 'member-card';
+  card.id = `card-${m.id}`;
+  card.style.animationDelay = (idx*80)+'ms';
+
+  const avatarHTML = m.photo
+    ? `<img src="${m.photo}" alt="${m.first}"/>`
+    : initials(m.first, m.last);
+
+  card.innerHTML = `
+    <div class="avatar" style="background:linear-gradient(135deg,${bg},#000a);box-shadow:0 0 18px ${bg}55;">
+      <div class="avatar-ring"></div>${avatarHTML}
+    </div>
+    <div class="member-name">${m.first}<br/>${m.last}</div>
+    <div class="member-year">${m.birth}${m.death?' – '+m.death:''}</div>
+    <span class="member-role role-${m.role}">${m.role}</span>
+    <div class="card-actions">
+      <button class="card-btn view-btn"   onclick="event.stopPropagation();openViewModal(${m.id})">👁 View</button>
+      <button class="card-btn edit-btn"   onclick="event.stopPropagation();openEditModal(${m.id})">✏️ Edit</button>
+      <button class="card-btn delete-btn" onclick="event.stopPropagation();openDeleteModal(${m.id})">🗑️</button>
+    </div>
+  `;
+  card.addEventListener('click', ()=> openViewModal(m.id));
+  return card;
+}
+
+/* ════════════════════════════════════════════════
+   STATS
+════════════════════════════════════════════════ */
+function updateStats(){
+  document.getElementById('stat-members').textContent = members.length;
+  const marriages = members.filter(m=>m.spouseId !== null).length / 2;
+  document.getElementById('stat-marriages').textContent = Math.ceil(marriages);
+  const activeGens = [...new Set(members.map(m=>m.gen))].length;
+  document.getElementById('stat-gens').textContent = activeGens;
+}
+
+/* ════════════════════════════════════════════════
+   SVG LINES
+════════════════════════════════════════════════ */
+function drawLines(){
+  const svg = document.getElementById('tree-svg');
+  const container = document.getElementById('tree-container');
+  svg.setAttribute('viewBox',`0 0 ${container.scrollWidth} ${container.scrollHeight}`);
+  svg.style.width = container.scrollWidth+'px';
+  svg.style.height = container.scrollHeight+'px';
+  svg.innerHTML = '';
+  if(!showLines) return;
+
+  const cRect = container.getBoundingClientRect();
+
+  // Glow filter
+  const defs = document.createElementNS('http://www.w3.org/2000/svg','defs');
+  defs.innerHTML = `<filter id="glow"><feGaussianBlur in="SourceGraphic" stdDeviation="3" result="b"/><feMerge><feMergeNode in="b"/><feMergeNode in="SourceGraphic"/></feMerge></filter>`;
+  svg.appendChild(defs);
+
+  // Parent → Child
+  members.forEach(child => {
+    (child.parents||[]).forEach(pid => {
+      const pe = document.getElementById(`card-${pid}`);
+      const ce = document.getElementById(`card-${child.id}`);
+      if(!pe||!ce) return;
+      const pr = pe.getBoundingClientRect(), cr = ce.getBoundingClientRect();
+      const sx = container.scrollLeft, sy = container.scrollTop;
+      const x1 = pr.left-cRect.left+sx+pr.width/2, y1 = pr.top-cRect.top+sy+pr.height;
+      const x2 = cr.left-cRect.left+sx+cr.width/2, y2 = cr.top-cRect.top+sy;
+      const my = (y1+y2)/2;
+      const path = makeSVGEl('path',{
+        d:`M${x1},${y1} C${x1},${my} ${x2},${my} ${x2},${y2}`,
+        stroke:'rgba(240,192,64,0.5)', 'stroke-width':'2', fill:'none', 'stroke-dasharray':'6,3'
+      });
+      svg.appendChild(path);
+      [{ x:x1,y:y1},{x:x2,y:y2}].forEach(p=>{
+        svg.appendChild(makeSVGEl('circle',{cx:p.x,cy:p.y,r:4,fill:'#f0c040',filter:'url(#glow)'}));
+      });
+    });
+  });
+
+  // Spouse lines
+  const drawn = new Set();
+  members.forEach(m => {
+    if(!m.spouseId) return;
+    const key = [m.id,m.spouseId].sort().join('-');
+    if(drawn.has(key)) return;
+    drawn.add(key);
+    const e1=document.getElementById(`card-${m.id}`), e2=document.getElementById(`card-${m.spouseId}`);
+    if(!e1||!e2) return;
+    const r1=e1.getBoundingClientRect(), r2=e2.getBoundingClientRect();
+    const sx=container.scrollLeft, sy=container.scrollTop;
+    const x1=r1.left-cRect.left+sx+r1.width, y1=r1.top-cRect.top+sy+r1.height/2;
+    const x2=r2.left-cRect.left+sx, y2=r2.top-cRect.top+sy+r2.height/2;
+    svg.appendChild(makeSVGEl('line',{x1,y1,x2,y2,stroke:'rgba(255,130,180,0.6)','stroke-width':'2','stroke-dasharray':'4,3'}));
+    const mx=(x1+x2)/2, my=(y1+y2)/2;
+    const heart=document.createElementNS('http://www.w3.org/2000/svg','text');
+    heart.setAttribute('x',mx); heart.setAttribute('y',my+6);
+    heart.setAttribute('text-anchor','middle'); heart.setAttribute('font-size','14');
+    heart.setAttribute('fill','rgba(255,130,180,0.9)'); heart.textContent='♥';
+    svg.appendChild(heart);
+  });
+}
+
+function makeSVGEl(tag, attrs){
+  const el = document.createElementNS('http://www.w3.org/2000/svg', tag);
+  Object.entries(attrs).forEach(([k,v])=> el.setAttribute(k,v));
+  return el;
+}
+
+/* ════════════════════════════════════════════════
+   OVERLAY HELPERS
+════════════════════════════════════════════════ */
+function openOverlay(id){ document.getElementById(id).classList.add('open'); }
+function closeOverlay(id){ document.getElementById(id).classList.remove('open'); }
+function overlayClick(e, id){ if(e.target === document.getElementById(id)) closeOverlay(id); }
+
+/* ════════════════════════════════════════════════
+   VIEW MODAL
+════════════════════════════════════════════════ */
+function openViewModal(id){
+  const m = members.find(x=>x.id===id);
+  if(!m) return;
+  currentViewId = id;
+
+  const [bg] = avatarColor(m.id);
+  const avEl = document.getElementById('vm-avatar');
+  avEl.style.background = `linear-gradient(135deg,${bg},#000a)`;
+  avEl.innerHTML = m.photo ? `<img src="${m.photo}" alt="${m.first}"/>` : initials(m.first, m.last);
+
+  document.getElementById('vm-name').textContent = m.first+' '+m.last;
+  document.getElementById('vm-role').innerHTML = `<span class="member-role role-${m.role}">${m.role}</span>`;
+
+  const childNames = (m.children||[]).map(cid=>{ const c=members.find(x=>x.id===cid); return c?c.first+' '+c.last:''; }).filter(Boolean);
+  const parentNames = (m.parents||[]).map(pid=>{ const p=members.find(x=>x.id===pid); return p?p.first+' '+p.last:''; }).filter(Boolean);
+  const spouse = m.spouseId ? members.find(x=>x.id===m.spouseId) : null;
+
+  const items = [
+    {k:'Born', v:`${m.birth}${!m.death?' (Age '+(new Date().getFullYear()-m.birth)+')':''}`},
+    {k:'Location', v:m.location||'—'},
+    {k:'Occupation', v:m.occupation||'—'},
+    {k:'Hobbies', v:m.hobby||'—'},
+    ...(spouse?[{k:'Spouse', v:spouse.first+' '+spouse.last}]:[]),
+    ...(parentNames.length?[{k:'Parents', v:parentNames.join(' & ')}]:[]),
+    ...(m.death?[{k:'Passed', v:String(m.death)}]:[]),
+    ...(childNames.length?[{k:'Children', tags:childNames, full:false}]:[]),
+    {k:'About', v:m.bio||'—', full:true}
+  ];
+
+  document.getElementById('vm-info').innerHTML = items.map(item=>`
+    <div class="info-item ${item.full?'full':''}">
+      <div class="info-key">${item.k}</div>
+      ${item.tags
+        ? `<div style="margin-top:4px">${item.tags.map(t=>`<span class="rel-tag">${t}</span>`).join('')}</div>`
+        : `<div class="info-value">${item.v}</div>`}
+    </div>`).join('');
+
+  openOverlay('view-overlay');
+}
+
+function openEditFromView(){
+  closeOverlay('view-overlay');
+  openEditModal(currentViewId);
+}
+function openDeleteFromView(){
+  closeOverlay('view-overlay');
+  openDeleteModal(currentViewId);
+}
+
+/* ════════════════════════════════════════════════
+   ADD MODAL
+════════════════════════════════════════════════ */
+function openAddModal(){
+  resetPhotoUpload('add-photo-preview','add-photo-area');
+  addPhotoData = null;
+  ['a-first','a-last','a-birth','a-death','a-loc','a-occ','a-hobby','a-bio'].forEach(id=>{ document.getElementById(id).value=''; });
+  document.getElementById('a-gen').value = '3';
+  document.getElementById('a-role').value = 'son';
+  openOverlay('add-overlay');
+}
+
+function addMember(){
+  const first = document.getElementById('a-first').value.trim();
+  const last  = document.getElementById('a-last').value.trim();
+  if(!first||!last){ showToast('⚠️ First and last name are required!','error'); return; }
+
+  const newM = {
+    id: nextId++,
+    gen: parseInt(document.getElementById('a-gen').value),
+    first, last,
+    birth: parseInt(document.getElementById('a-birth').value)||2000,
+    death: parseInt(document.getElementById('a-death').value)||null,
+    gender: 'unknown',
+    role: document.getElementById('a-role').value,
+    location: document.getElementById('a-loc').value||'Unknown',
+    occupation: document.getElementById('a-occ').value||'Unknown',
+    hobby: document.getElementById('a-hobby').value||'N/A',
+    bio: document.getElementById('a-bio').value||'A new member of the Anderson family.',
+    spouseId: null, parents:[], children:[],
+    photo: addPhotoData
+  };
+
+  members.push(newM);
+  closeOverlay('add-overlay');
+  render();
+  showToast(`🌱 ${first} ${last} added to the family!`);
+}
+
+/* ════════════════════════════════════════════════
+   EDIT MODAL
+════════════════════════════════════════════════ */
+function openEditModal(id){
+  const m = members.find(x=>x.id===id);
+  if(!m) return;
+  currentEditId = id;
+  editPhotoData = m.photo;
+
+  document.getElementById('e-id').value = id;
+  document.getElementById('e-first').value = m.first;
+  document.getElementById('e-last').value = m.last;
+  document.getElementById('e-birth').value = m.birth||'';
+  document.getElementById('e-death').value = m.death||'';
+  document.getElementById('e-gen').value = m.gen;
+  document.getElementById('e-role').value = m.role;
+  document.getElementById('e-loc').value = m.location||'';
+  document.getElementById('e-occ').value = m.occupation||'';
+  document.getElementById('e-hobby').value = m.hobby||'';
+  document.getElementById('e-bio').value = m.bio||'';
+
+  const prev = document.getElementById('edit-photo-preview');
+  const area = document.getElementById('edit-photo-area');
+  if(m.photo){
+    prev.innerHTML = `<img src="${m.photo}" alt="photo"/>`;
+    area.classList.add('has-image');
+  } else {
+    resetPhotoUpload('edit-photo-preview','edit-photo-area');
+  }
+  openOverlay('edit-overlay');
+}
+
+function saveEdit(){
+  const first = document.getElementById('e-first').value.trim();
+  const last  = document.getElementById('e-last').value.trim();
+  if(!first||!last){ showToast('⚠️ First and last name are required!','error'); return; }
+
+  const m = members.find(x=>x.id===currentEditId);
+  if(!m) return;
+
+  m.first = first;
+  m.last  = last;
+  m.birth = parseInt(document.getElementById('e-birth').value)||m.birth;
+  m.death = parseInt(document.getElementById('e-death').value)||null;
+  m.gen   = parseInt(document.getElementById('e-gen').value);
+  m.role  = document.getElementById('e-role').value;
+  m.location   = document.getElementById('e-loc').value||m.location;
+  m.occupation = document.getElementById('e-occ').value||m.occupation;
+  m.hobby      = document.getElementById('e-hobby').value||m.hobby;
+  m.bio        = document.getElementById('e-bio').value||m.bio;
+  if(editPhotoData !== m.photo) m.photo = editPhotoData;
+
+  closeOverlay('edit-overlay');
+  render();
+  showToast(`✅ ${first} ${last} updated successfully!`);
+}
+
+/* ════════════════════════════════════════════════
+   DELETE
+════════════════════════════════════════════════ */
+function openDeleteModal(id){
+  const m = members.find(x=>x.id===id);
+  if(!m) return;
+  currentDeleteId = id;
+  document.getElementById('del-name').textContent = m.first+' '+m.last;
+  openOverlay('delete-overlay');
+}
+
+function confirmDelete(){
+  if(!currentDeleteId) return;
+  const m = members.find(x=>x.id===currentDeleteId);
+  if(!m) return;
+  const name = m.first+' '+m.last;
+
+  // Remove from spouse reference
+  if(m.spouseId){
+    const sp = members.find(x=>x.id===m.spouseId);
+    if(sp) sp.spouseId = null;
+  }
+  // Remove from children's parent list
+  (m.children||[]).forEach(cid=>{
+    const c = members.find(x=>x.id===cid);
+    if(c) c.parents = c.parents.filter(pid=>pid!==currentDeleteId);
+  });
+  // Remove from parents' children list
+  (m.parents||[]).forEach(pid=>{
+    const p = members.find(x=>x.id===pid);
+    if(p) p.children = p.children.filter(cid=>cid!==currentDeleteId);
+  });
+
+  members = members.filter(x=>x.id!==currentDeleteId);
+  closeOverlay('delete-overlay');
+  render();
+  showToast(`🗑️ ${name} removed from the family tree.`);
+  currentDeleteId = null;
+}
+
+/* ════════════════════════════════════════════════
+   SIDE ADD MODAL (Spouse)
+════════════════════════════════════════════════ */
+function openSideModal(linkedId, side){
+  const m = members.find(x=>x.id===linkedId);
+  if(!m) return;
+  currentSideLinkedId = linkedId;
+
+  document.getElementById('s-linked-id').value = linkedId;
+  document.getElementById('side-target-name').textContent = m.first+' '+m.last;
+  document.getElementById('side-position-label').textContent = side === 'left' ? 'to the left of' : 'to the right of';
+
+  resetPhotoUpload('side-photo-preview','side-photo-area');
+  sidePhotoData = null;
+  ['s-first','s-last','s-birth','s-death','s-loc','s-occ','s-hobby','s-bio'].forEach(id=>{
+    document.getElementById(id).value='';
+  });
+  document.getElementById('s-role').value = 'wife';
+  openOverlay('side-overlay');
+}
+
+function addSideMember(){
+  const first = document.getElementById('s-first').value.trim();
+  const last  = document.getElementById('s-last').value.trim();
+  if(!first||!last){ showToast('⚠️ First and last name are required!','error'); return; }
+
+  const linked = members.find(x=>x.id===currentSideLinkedId);
+  if(!linked) return;
+
+  const newM = {
+    id: nextId++,
+    gen: linked.gen,
+    first, last,
+    birth: parseInt(document.getElementById('s-birth').value)||2000,
+    death: parseInt(document.getElementById('s-death').value)||null,
+    gender: 'unknown',
+    role: document.getElementById('s-role').value,
+    location: document.getElementById('s-loc').value||'Unknown',
+    occupation: document.getElementById('s-occ').value||'Unknown',
+    hobby: document.getElementById('s-hobby').value||'N/A',
+    bio: document.getElementById('s-bio').value||'Partner of '+linked.first+' '+linked.last+'.',
+    spouseId: currentSideLinkedId,
+    parents:[], children:[],
+    photo: sidePhotoData
+  };
+
+  // Link both ways
+  linked.spouseId = newM.id;
+  members.push(newM);
+
+  closeOverlay('side-overlay');
+  render();
+  showToast(`💑 ${first} ${last} added as partner of ${linked.first}!`);
+}
+
+/* ════════════════════════════════════════════════
+   PHOTO UPLOAD
+════════════════════════════════════════════════ */
+function triggerUpload(inputId){
+  document.getElementById(inputId).click();
+}
+
+function handlePhotoUpload(event, previewId, areaId){
+  const file = event.target.files[0];
+  if(!file) return;
+  if(file.size > 5 * 1024 * 1024){ showToast('⚠️ Image must be under 5MB','error'); return; }
+
+  const reader = new FileReader();
+  reader.onload = (e) => {
+    const data = e.target.result;
+    const prev = document.getElementById(previewId);
+    prev.innerHTML = `<img src="${data}" alt="preview"/>`;
+    document.getElementById(areaId).classList.add('has-image');
+
+    // Store in correct variable
+    if(previewId === 'add-photo-preview')  addPhotoData  = data;
+    if(previewId === 'edit-photo-preview') editPhotoData = data;
+    if(previewId === 'side-photo-preview') sidePhotoData = data;
+  };
+  reader.readAsDataURL(file);
+}
+
+function resetPhotoUpload(previewId, areaId){
+  document.getElementById(previewId).innerHTML = '📷';
+  document.getElementById(areaId).classList.remove('has-image');
+}
+
+/* ════════════════════════════════════════════════
+   SEARCH
+════════════════════════════════════════════════ */
+document.getElementById('search-input').addEventListener('input', function(){
+  const q = this.value.toLowerCase().trim();
+  if(!q){ resetHighlight(); return; }
+  members.forEach(m => {
+    const card = document.getElementById(`card-${m.id}`);
+    if(!card) return;
+    const match = `${m.first} ${m.last} ${m.occupation} ${m.location} ${m.role}`.toLowerCase().includes(q);
+    card.classList.toggle('highlight', match);
+    card.classList.toggle('dimmed', !match);
+  });
+});
+
+function resetHighlight(){
+  document.getElementById('search-input').value = '';
+  members.forEach(m => {
+    const c = document.getElementById(`card-${m.id}`);
+    if(c){ c.classList.remove('highlight','dimmed'); }
+  });
+}
+
+/* ════════════════════════════════════════════════
+   TOGGLE LINES / ZOOM
+════════════════════════════════════════════════ */
+function toggleLines(){ showLines=!showLines; drawLines(); }
+function zoom(f){
+  currentScale = Math.min(Math.max(currentScale*f, 0.3), 3);
+  applyZoom();
+}
+function zoomReset(){ currentScale=1; applyZoom(); }
+function applyZoom(){
+  const inner = document.getElementById('tree-inner');
+  inner.style.transform = `scale(${currentScale})`;
+  inner.style.transformOrigin = 'top center';
+  setTimeout(drawLines, 150);
+}
+
+/* ════════════════════════════════════════════════
+   TOAST
+════════════════════════════════════════════════ */
+function showToast(msg, type='success'){
+  const t = document.getElementById('toast');
+  t.textContent = msg;
+  t.className = type==='error' ? 'error-toast show' : 'show';
+  clearTimeout(t._timer);
+  t._timer = setTimeout(()=>{ t.className=''; }, 3200);
+}
+
+/* ════════════════════════════════════════════════
+   PARTICLES
+════════════════════════════════════════════════ */
+function createParticles(){
+  const c = document.getElementById('particles');
+  for(let i=0;i<30;i++){
+    const p=document.createElement('div');
+    p.className='particle';
+    const s=Math.random()*3+1;
+    p.style.cssText=`width:${s}px;height:${s}px;left:${Math.random()*100}%;animation-duration:${Math.random()*15+10}s;animation-delay:${Math.random()*10}s;`;
+    c.appendChild(p);
+  }
+}
+
+/* ════════════════════════════════════════════════
+   RESIZE
+════════════════════════════════════════════════ */
+let resizeTimer;
+window.addEventListener('resize', ()=>{
+  clearTimeout(resizeTimer);
+  resizeTimer = setTimeout(drawLines, 250);
+});
+document.getElementById('tree-container').addEventListener('scroll', drawLines);
+
+/* ════════════════════════════════════════════════
+   INIT
+════════════════════════════════════════════════ */
+createParticles();
+render();
+</script>
+</body>
+</html>
