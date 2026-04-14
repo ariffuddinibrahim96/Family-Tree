@@ -1,0 +1,16 @@
+backend:
+  name: github
+  repo: ariffuddinibrahim96/Family-Tree
+
+media_folder: "images/uploads"
+public_folder: "/images/uploads"
+
+collections:
+  - name: "pages"
+    label: "Pages"
+    files:
+      - file: "index.html"
+        label: "Home Page"
+        name: "home"
+        fields:
+          - { label: "Content", name: "body", widget: "markdown" }
